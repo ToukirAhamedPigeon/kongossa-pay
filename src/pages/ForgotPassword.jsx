@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { Unlock, CheckCircle2 } from "lucide-react";
 import { sendForgotPassword } from "../api/auth";
 import { useDispatch } from "react-redux";
-import { showToast } from "@/store/toastSlice"; // ✅ new import
+import { showToast } from "@/store/toastSlice"; 
+import {AuthFormCard} from "@/components/common/AuthFormCard";
 
 export default function ForgotPasswordPage() {
   const dispatch = useDispatch();
@@ -78,70 +79,47 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f3f7f9] flex items-center justify-center p-6 relative">
-      {/* ✅ Global toast system handles toasts */}
-
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-md bg-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] p-8"
-      >
-        {/* Header */}
-        <div className="flex flex-col items-center">
-          <div className="w-24 h-24 rounded-full overflow-hidden -mt-12 mb-4 shadow-md flex items-center justify-center bg-red-600">
-            <Unlock className="text-white w-12 h-12" />
-          </div>
-
-          <h1 className="text-2xl font-extrabold text-[#0b1226] text-center leading-tight">
-            Forgot Password
-          </h1>
-          <p className="text-sm text-[#6b7280] mt-2 text-center">
-            Enter your registered email to receive a password reset link
-          </p>
+    <AuthFormCard icon={<Unlock className="text-white w-8 h-8" />} title="Forgot Password" subTitle="Enter your registered email to receive a password reset link" iconClassName="bg-red-600">
+      {/* Form */}
+      <div className="mt-6 space-y-3">
+        <div>
+          <label className="block text-sm font-medium text-[#475569] mb-1">
+            Email
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="w-full border rounded-md px-4 py-3 bg-[#fbfdff] placeholder-[#aab4c3] focus:ring-2 focus:ring-[#e6eef9] focus:border-transparent shadow-sm"
+          />
         </div>
 
-        {/* Form */}
-        <div className="mt-6 space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-[#475569] mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full border rounded-md px-4 py-3 bg-[#fbfdff] placeholder-[#aab4c3] focus:ring-2 focus:ring-[#e6eef9] focus:border-transparent shadow-sm"
-            />
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          disabled={loading || !email}
+          onClick={success ? handleResend : handleSend}
+          className={`w-full py-3 rounded-xl text-white font-medium mt-4 shadow-[inset_0_-4px_0_rgba(0,0,0,0.12)] ${
+            loading
+              ? "bg-[#101827] opacity-80 cursor-not-allowed"
+              : "bg-[#0b1226] hover:brightness-105"
+          }`}
+        >
+          {!success
+            ? loading
+              ? "Sending..."
+              : "Send Reset Link"
+            : resendLoading
+            ? "Resending..."
+            : "Resend Reset Link"}
+        </motion.button>
+
+        {errorMessage && (
+          <div className="mt-3 text-sm text-red-600 text-center">
+            {errorMessage}
           </div>
-
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            disabled={loading || !email}
-            onClick={success ? handleResend : handleSend}
-            className={`w-full py-3 rounded-xl text-white font-medium mt-4 shadow-[inset_0_-4px_0_rgba(0,0,0,0.12)] ${
-              loading
-                ? "bg-[#101827] opacity-80 cursor-not-allowed"
-                : "bg-[#0b1226] hover:brightness-105"
-            }`}
-          >
-            {!success
-              ? loading
-                ? "Sending..."
-                : "Send Reset Link"
-              : resendLoading
-              ? "Resending..."
-              : "Resend Reset Link"}
-          </motion.button>
-
-          {errorMessage && (
-            <div className="mt-3 text-sm text-red-600 text-center">
-              {errorMessage}
-            </div>
-          )}
-        </div>
-      </motion.div>
-    </div>
+        )}
+      </div>
+    </AuthFormCard>
   );
 }

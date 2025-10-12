@@ -209,117 +209,210 @@
 //   );
 // }
 
-import { useState } from 'react';
-import axios from 'axios';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import UploadField from './../components/common/UploadFile';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { motion } from "framer-motion";
+import { User, Building, Lock, Mail, Phone, Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import {AuthFormCard} from "@/components/common/AuthFormCard";
 
-const schema = z.object({
-  accountType: z.enum(['PERSONAL', 'BUSINESS']),
-  email: z.string().email(),
-  password: z.string().min(6),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  phoneNumber: z.string().optional(),
+// ✅ Zod Schema
+const registerSchema = z.object({
+  accountType: z.enum(["personal", "business"]),
+  fullName: z.string().min(3, "Full name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(8, "Phone number required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6),
+  // business fields
   companyName: z.string().optional(),
-  legalForm: z.string().optional(),
-  managerName: z.string().optional(),
   companyPhone: z.string().optional(),
-  companyAddress: z.string().optional(),
-  businessDescription: z.string().optional(),
-  legalFormDocument: z.string().optional(),
+  managerName: z.string().optional(),
+  address: z.string().optional(),
+  description: z.string().optional(),
+  legalForm: z.string().optional(),
+  legalDoc: z.any().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 export default function Register() {
-  const [accountType, setAccountType] = useState('PERSONAL');
-  const { register, handleSubmit, setValue, formState: { errors } } =
-    useForm({ resolver: zodResolver(schema) });
+  const [accountType, setAccountType] = useState("personal");
 
-  const onSubmit = async (data) => {
-    try {
-      await axios.post('/api/auth/register', data);
-      alert('Registration submitted for approval!');
-    } catch (err) {
-      alert('Error: ' + (err.response?.data?.message || 'Something went wrong'));
-    }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { accountType: "personal" },
+  });
+
+  const onSubmit = (data) => {
+    console.log(data);
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {/* Account Type Toggle */}
-      <div className="flex space-x-4">
-        <button
-          type="button"
-          onClick={() => setAccountType('PERSONAL')}
-          className={`px-4 py-2 rounded ${
-            accountType === 'PERSONAL' ? 'bg-blue-600 text-white' : 'bg-gray-200'
-          }`}
-        >
-          Personal
-        </button>
-        <button
-          type="button"
-          onClick={() => setAccountType('BUSINESS')}
-          className={`px-4 py-2 rounded ${
-            accountType === 'BUSINESS' ? 'bg-blue-600 text-white' : 'bg-gray-200'
-          }`}
-        >
-          Business
-        </button>
-      </div>
+    <AuthFormCard
+    title="Create your account"
+    icon={<User className="text-white w-8 h-8" />}
+    subTitle={<>Choose your account type and fill in your details to get started with <span className="font-semibold">Kongossa Pay</span></>} iconClassName="bg-gray-600" cardWidth="max-w-lg md:max-w-2xl">
+          {/* Account Type */}
+          <div>
+            <Label className="text-gray-700 font-medium">Choose Account Type</Label>
+            <div className="flex gap-4 mt-3">
+              {[
+                {
+                  type: "personal",
+                  title: "Personal",
+                  desc: "For individual use and personal finance management",
+                  icon: <User className="w-6 h-6" />,
+                },
+                {
+                  type: "business",
+                  title: "Business",
+                  desc: "For companies, merchant & business operations",
+                  icon: <Building className="w-6 h-6" />,
+                },
+              ].map((opt) => (
+                <motion.div
+                  key={opt.type}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.3 }}
+                  onClick={() => setAccountType(opt.type)}
+                  className={cn(
+                    "flex-1 p-4 border rounded-xl cursor-pointer flex flex-col items-center justify-center text-center space-y-1",
+                    accountType === opt.type
+                      ? "border-gray-800 bg-gray-100"
+                      : "border-gray-200 hover:border-gray-300"
+                  )}
+                >
+                  <div className="text-gray-700">{opt.icon}</div>
+                  <h4 className="font-medium">{opt.title}</h4>
+                  <p className="text-xs text-gray-500">{opt.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
 
-      {/* Common Fields */}
-      <div>
-        <input {...register('email')} placeholder="Email" className="border p-2 w-full" />
-        {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
-      </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Personal Info */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                <User className="w-4 h-4" /> Personal Information
+              </h3>
 
-      <div>
-        <input
-          type="password"
-          {...register('password')}
-          placeholder="Password"
-          className="border p-2 w-full"
-        />
-        {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
-      </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Full Name</Label>
+                  <Input {...register("fullName")} placeholder="Enter your full name" />
+                  {errors.fullName && <p className="text-red-500 text-sm">{errors.fullName.message}</p>}
+                </div>
+                <div>
+                  <Label>Email Address</Label>
+                  <Input {...register("email")} placeholder="Enter your email address" />
+                  {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+                </div>
+              </div>
 
-      {accountType === 'PERSONAL' && (
-        <>
-          <input {...register('firstName')} placeholder="First name" className="border p-2 w-full" />
-          <input {...register('lastName')} placeholder="Last name" className="border p-2 w-full" />
-          <input {...register('phoneNumber')} placeholder="Phone number" className="border p-2 w-full" />
-        </>
-      )}
+              <div>
+                <Label>Phone Number</Label>
+                <Input {...register("phone")} placeholder="Enter your phone number" />
+                {errors.phone && <p className="text-red-500 text-sm">{errors.phone.message}</p>}
+              </div>
+            </div>
 
-      {accountType === 'BUSINESS' && (
-        <>
-          <input {...register('companyName')} placeholder="Company Name" className="border p-2 w-full" />
-          <input {...register('legalForm')} placeholder="Legal Form" className="border p-2 w-full" />
-          <input {...register('managerName')} placeholder="Manager Name" className="border p-2 w-full" />
-          <input {...register('companyPhone')} placeholder="Company Phone" className="border p-2 w-full" />
-          <input {...register('companyAddress')} placeholder="Company Address" className="border p-2 w-full" />
-          <textarea {...register('businessDescription')} placeholder="Business Description" className="border p-2 w-full" />
+            {/* Business Fields */}
+            {accountType === "business" && (
+              <motion.div
+                className="space-y-4"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                  <Building className="w-4 h-4" /> Business Information
+                </h3>
 
-          {/* File Upload Field */}
-          <UploadField
-            label="Legal Form Document"
-            name="legalFormDocument"
-            onUpload={(url) => setValue('legalFormDocument', url)}
-            showPreview={false}
-          />
-        </>
-      )}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Company Name</Label>
+                    <Input {...register("companyName")} placeholder="Enter your company name" />
+                  </div>
+                  <div>
+                    <Label>Legal Form</Label>
+                    <Input {...register("legalForm")} placeholder="e.g., LLC, PLC, etc." />
+                  </div>
+                </div>
 
-      <button
-        type="submit"
-        className="bg-green-600 text-white p-2 rounded w-full hover:bg-green-700"
-      >
-        Register
-      </button>
-    </form>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Manager/Contact Person</Label>
+                    <Input {...register("managerName")} placeholder="Enter manager or contact person name" />
+                  </div>
+                  <div>
+                    <Label>Company Phone</Label>
+                    <Input {...register("companyPhone")} placeholder="Enter company phone number" />
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Company Address</Label>
+                  <Input {...register("address")} placeholder="Enter complete company address" />
+                </div>
+
+                <div>
+                  <Label>Legal Form Document</Label>
+                  <Input type="file" {...register("legalDoc")} className="cursor-pointer" />
+                  <p className="text-xs text-gray-500 mt-1">Accepted formats: JPG, PNG, PDF (Max 5MB)</p>
+                </div>
+
+                <div>
+                  <Label>Business Description</Label>
+                  <Input {...register("description")} placeholder="Describe your business activities and services" />
+                </div>
+              </motion.div>
+            )}
+
+            {/* Security */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                <Lock className="w-4 h-4" /> Security
+              </h3>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Password</Label>
+                  <Input type="password" {...register("password")} placeholder="Create a strong password" />
+                  {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+                </div>
+                <div>
+                  <Label>Confirm Password</Label>
+                  <Input type="password" {...register("confirmPassword")} placeholder="Confirm your password" />
+                  {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword.message}</p>}
+                </div>
+              </div>
+            </div>
+
+            <Button type="submit" className="w-full mt-4">
+              Create Account
+            </Button>
+
+            <p className="text-center text-sm text-gray-600 mt-2">
+              Already have an account?{" "}
+              <a href="/login" className="text-black font-medium hover:underline">
+                Sign in here
+              </a>
+            </p>
+          </form>
+    </AuthFormCard>
   );
 }
-

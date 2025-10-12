@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheck, CheckCircle2 } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { resendOtp, verifyOtp } from "../api/auth";
 import { useDispatch } from "react-redux";
 import { setAccessToken, setUser, setRefreshTokenExpires } from "@/store/authSlice";
 import { showToast } from "@/store/toastSlice"; 
+import { AuthFormCard } from "@/components/common/AuthFormCard";
+import { SuccessAnimation } from "@/components/common/SuccessAnimation";
 
 export default function OTPVerificationPage() {
   const [params] = useSearchParams();
@@ -110,36 +112,9 @@ export default function OTPVerificationPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-[#f3f7f9] flex items-center justify-center p-6 relative">
-      {/* ✅ Removed local AnimatePresence toast, now global ToastContainer handles it */}
-
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-md bg-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] p-8"
-      >
-        {!verified ? (
+  {!verified ? (
           <>
-            {/* Header */}
-            <div className="flex flex-col items-center">
-              <div className="w-24 h-24 rounded-full overflow-hidden -mt-12 mb-4 shadow-md flex items-center justify-center bg-green-600">
-                <ShieldCheck className="text-white w-12 h-12" />
-              </div>
-
-              <h1 className="text-2xl font-extrabold text-[#0b1226] text-center leading-tight">
-                Verify Your Email
-                <br />
-                <span className="inline-block text-lg font-bold">
-                  Enter the OTP sent to {email}
-                </span>
-              </h1>
-              <p className="text-sm text-[#6b7280] mt-2 text-center">
-                Please check your inbox or spam folder
-              </p>
-            </div>
-
+          <AuthFormCard icon={<ShieldCheck className="text-white w-8 h-8" />} title="Verify Your Email" title2={`Enter the OTP sent to ${email}`} subTitle=" Please check your inbox or spam folder" iconClassName="bg-green-600">
             {/* OTP Form */}
             <div className="mt-6 space-y-3">
               <div>
@@ -188,36 +163,9 @@ export default function OTPVerificationPage() {
                 {resendLoading ? "Resending..." : "Resend OTP"}
               </button>
             </div>
+           </AuthFormCard>
           </>
         ) : (
-          // ✅ Success Animation
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="flex flex-col items-center justify-center text-center py-16"
-          >
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: [0, 1.2, 1], opacity: 1 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="relative"
-            >
-              <CheckCircle2 className="w-20 h-20 text-green-500 mb-4" />
-              <motion.span
-                className="absolute inset-0 rounded-full bg-green-400/30 blur-lg"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: [1, 1.8], opacity: [0.6, 0] }}
-                transition={{ duration: 1.2, repeat: 0 }}
-              />
-            </motion.div>
-            <h2 className="text-2xl font-bold text-[#0b1226]">OTP Verified!</h2>
-            <p className="text-[#6b7280] mt-2 text-sm">
-              Redirecting you to the next step...
-            </p>
-          </motion.div>
-        )}
-      </motion.div>
-    </div>
-  );
+          <SuccessAnimation successMessage="OTP Verified!" nextInstruction="Redirecting you to the next step..." />
+        )};
 }

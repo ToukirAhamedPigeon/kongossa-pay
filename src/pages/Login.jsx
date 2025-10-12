@@ -10,6 +10,7 @@ import { setAccessToken, setUser } from "../store/authSlice";
 import * as z from "zod";
 import PasswordInput from "./../components/common/PasswordInput";
 import { showToast } from "@/store/toastSlice";
+import { AuthFormCard } from "@/components/common/AuthFormCard";
 
 const LoginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -57,28 +58,7 @@ export default function LoginPage() {
 };
 
   return (
-    <div className="min-h-screen bg-[#f3f7f9] flex items-center justify-center p-6 relative">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-md bg-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] p-8"
-        style={{ boxShadow: "0 14px 30px rgba(3,16,28,0.08)" }}
-      >
-        <div className="flex flex-col items-center">
-          <div className="w-24 h-24 rounded-full overflow-hidden -mt-12 mb-4 shadow-md flex items-center justify-center bg-blue-600">
-            <Wallet className="text-white w-12 h-12" />
-          </div>
-          <h1 className="text-2xl font-extrabold text-[#0b1226] text-center leading-tight">
-            Welcome to Kongossa-Pay
-            <br />
-            <span className="inline-block text-lg font-bold">
-              The Future of Digital Payments
-            </span>
-          </h1>
-          <p className="text-sm text-[#6b7280] mt-2">Sign in to continue</p>
-        </div>
-
+    <AuthFormCard icon={<Wallet className="text-white w-8 h-8" />} title="Welcome to Kongossa-Pay" title2="The Future of Digital Payments" subTitle="Sign in to continue" iconClassName="bg-blue-600">
         <form onSubmit={handleSubmit(onSubmit)} className="mt-6">
           <label className="block text-sm font-medium text-[#475569] mb-2">Email</label>
           <input
@@ -122,7 +102,6 @@ export default function LoginPage() {
             </div>
           </div>
         </form>
-      </motion.div>
-    </div>
+    </AuthFormCard>
   );
 }
