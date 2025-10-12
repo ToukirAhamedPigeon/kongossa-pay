@@ -41,7 +41,7 @@ export default function LoginPage() {
     const data = await loginApi(values);
 
     if (data.otp_required) {
-      navigate(`/verify-otp?email=${encodeURIComponent(values.identifier)}&purpose=login&rememberMe=${rememberMe}`);
+      navigate(`/verify-otp?email=${encodeURIComponent(data.email)}&purpose=login&rememberMe=${rememberMe}`);
     } else {
       dispatch(setUser(data.userInfo));
       dispatch(setAccessToken(data.accessToken));
