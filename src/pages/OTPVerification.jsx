@@ -16,6 +16,7 @@ export default function OTPVerificationPage() {
 
   const email = params.get("email");
   const purpose = params.get("purpose") || "register";
+  const rememberMe = params.get("rememberMe") === "true";
 
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,6 +63,7 @@ export default function OTPVerificationPage() {
         email,
         code: otp,
         purpose,
+        rememberMe,
       });
 
       console.log(resp);
@@ -111,7 +113,7 @@ export default function OTPVerificationPage() {
       setLoading(false);
     }
   }
-
+  return(<>
   {!verified ? (
           <>
           <AuthFormCard icon={<ShieldCheck className="text-white w-8 h-8" />} title="Verify Your Email" title2={`Enter the OTP sent to ${email}`} subTitle=" Please check your inbox or spam folder" iconClassName="bg-green-600">
@@ -167,5 +169,7 @@ export default function OTPVerificationPage() {
           </>
         ) : (
           <SuccessAnimation successMessage="OTP Verified!" nextInstruction="Redirecting you to the next step..." />
-        )};
+        )
+        }
+        </>);
 }

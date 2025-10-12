@@ -4,10 +4,13 @@ import api from "../lib/axios"; // authenticated instance
 const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:3000";
 
 // Register → sends OTP
-export const registerUser = async (data) => {
-  const res = await axios.post(`${API_BASE}/auth/register`, data, {
-    withCredentials: true,
-  });
+export const registerUser = async (formData) => {
+  const res = await axios.post(`${API_BASE}/auth/register`, formData, {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
   return res.data;
 };
 

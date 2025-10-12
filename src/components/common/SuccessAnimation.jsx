@@ -10,7 +10,6 @@ export const SuccessAnimation = ({ successMessage, nextInstruction }) => {
                 transition={{ duration: 0.6 }}
                 className="w-full max-w-md bg-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] p-8"
               >
-            // ✅ Success Animation
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}

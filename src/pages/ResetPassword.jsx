@@ -82,7 +82,7 @@ export default function ResetPasswordPage() {
       setLoading(false);
     }
   };
-
+return(<>
     {!success ? (
           <>
           <AuthFormCard
@@ -138,10 +138,10 @@ export default function ResetPasswordPage() {
             </AuthFormCard>
           </>
         ) : (
-          // ✅ Success Animation
           <SuccessAnimation
             successMessage="Password reset successful!"
             nextInstruction="Redirecting you to login page..."
           />
-        )};
+        )}
+        </>);
 }
