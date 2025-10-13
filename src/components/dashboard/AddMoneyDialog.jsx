@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CreditCard, Landmark, Smartphone } from 'lucide-react';
 // import { Transaction, User } from '@/api/entities';
-import { createTransaction, updateUser } from '@/api/transactions';
+import { createTransaction } from '@/api/transactions';
+import { updateUser } from '@/api/users';
 
 export default function AddMoneyDialog({ isOpen, onClose, onMoneyAdded, user }) {
   const [amount, setAmount] = useState('');

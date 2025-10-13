@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QrCode, Share, Copy, Download } from 'lucide-react';
 // import { QRPayment } from '@/api/entities';
-import { createQRPayment } from '@/api/transactions';
+import { createQRPayment } from '@/api/qrPayments';
 
 export default function QRCodeDialog({ isOpen, onClose, user }) {
   const [qrAmount, setQrAmount] = useState('');
