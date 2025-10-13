@@ -9,8 +9,10 @@ export const createPaymentMethod = async (data) => {
 };
 
 // Get all user payment methods
-export const getPaymentMethods = async () => {
-  const res = await api.get(`${API_BASE}/payment-methods`);
+export const getPaymentMethods = async ({ user_id }) => {
+  const res = await api.get(`${API_BASE}/payment-methods`, {
+    params: { user_id },
+  });
   return res.data;
 };
 

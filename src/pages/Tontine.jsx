@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 // import { Tontine, User } from '@/api/entities';
+import { getCurrentUser } from "@/api/auth";
+import { getTontines,createTontine } from "@/api/tontines";
+import { updateUser } from "@/api/users";
 
 import CreateTontineDialog from '../components/tontine/CreateTontineDialog';
 import TontineCard from '../components/tontine/TontineCard';
@@ -25,10 +28,10 @@ export default function TontinePage() {
 
   const loadTontineData = async () => {
     try {
-      const currentUser = await User.me();
+      const currentUser = await getCurrentUser();
       setUser(currentUser);
       
-      const userTontines = await Tontine.filter(
+      const userTontines = await getTontines(
         { creator_id: currentUser.id }, 
         '-created_date'
       );

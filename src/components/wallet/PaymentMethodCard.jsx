@@ -12,6 +12,7 @@ import {
   MoreVertical
 } from "lucide-react";
 // import { PaymentMethod } from "@/api/entities";
+import { deletePaymentMethod } from "@/api/paymentMethod";
 
 const methodIcons = {
   credit_card: CreditCard,
@@ -36,7 +37,7 @@ export default function PaymentMethodCard({ method, onRefresh }) {
   const handleDelete = async () => {
     if (confirm("Are you sure you want to remove this payment method?")) {
       try {
-        await PaymentMethod.delete(method.id);
+        await deletePaymentMethod(method.id);
         onRefresh();
       } catch (error) {
         console.error("Error deleting payment method:", error);

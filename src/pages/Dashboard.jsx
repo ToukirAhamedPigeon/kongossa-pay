@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 // import { User, Transaction } from "@/api/entities";
+import { getTransactions } from "@/api/transactions";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";

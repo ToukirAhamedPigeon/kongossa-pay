@@ -1,6 +1,10 @@
 
 import React, { useState, useEffect } from "react";
 // import { User, Transaction, PaymentMethod } from "@/api/entities";
+import { getCurrentUser } from "@/api/auth";
+import { createTransaction } from "@/api/transactions";
+import { getPaymentMethods } from "@/api/paymentMethod";
+import { updateUser } from "@/api/users";
 import { Send, ArrowLeft, Check, Search, CreditCard, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,9 +36,9 @@ export default function SendMoney() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const currentUser = await User.me();
+        const currentUser = await getCurrentUser();
         setUser(currentUser);
-        const methods = await PaymentMethod.filter({ user_id: currentUser.id, type: 'credit_card' });
+        const methods = await getPaymentMethods({ user_id: currentUser.id, type: 'credit_card' });
         setPaymentMethods(methods);
         if (methods.length > 0) {
             setSelectedCard(methods[0]);
@@ -54,7 +58,7 @@ export default function SendMoney() {
     }
     setIsSending(true);
      try {
-      await Transaction.create({
+      await createTransaction({
         sender_id: user.id,
         recipient_id: selectedContact.email,
         amount: parseFloat(amount),
@@ -65,7 +69,7 @@ export default function SendMoney() {
         description: `Payment to ${selectedContact.name}`
       });
       const newBalance = (user.wallet_balance || 0) - parseFloat(amount);
-      await User.updateMyUserData({ wallet_balance: Math.max(0, newBalance) });
+      await updateUser(user.id, { walletBalance: Math.max(0, newBalance) });
       setIsSuccess(true);
     } catch (error) {
       console.error("Error sending money:", error);

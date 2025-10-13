@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CreditCard, Landmark, Smartphone } from 'lucide-react';
 // import { Transaction, User } from '@/api/entities';
+import { createTransaction, updateUser } from '@/api/transactions';
 
 export default function AddMoneyDialog({ isOpen, onClose, onMoneyAdded, user }) {
   const [amount, setAmount] = useState('');
@@ -19,7 +20,7 @@ export default function AddMoneyDialog({ isOpen, onClose, onMoneyAdded, user }) 
     setIsProcessing(true);
     try {
       // Create a deposit transaction
-      await Transaction.create({
+      await createTransaction({
         sender_id: 'external_source',
         recipient_id: user.id,
         amount: parseFloat(amount),
@@ -32,7 +33,7 @@ export default function AddMoneyDialog({ isOpen, onClose, onMoneyAdded, user }) 
       
       // Update user's balance
       const newBalance = (user.wallet_balance || 0) + parseFloat(amount);
-      await User.updateMyUserData({ wallet_balance: newBalance });
+      await updateUser(user.id, { wallet_balance: newBalance });
       
       onMoneyAdded();
       onClose();

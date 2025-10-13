@@ -1,6 +1,10 @@
 
 import React, { useState, useEffect } from "react";
 // import { User, PaymentMethod } from "@/api/entities";
+import { getCurrentUser } from "@/api/auth";
+import { getPaymentMethods, createPaymentMethod } from "@/api/paymentMethod";
+import { updateUser } from "@/api/users";
+
 import { 
   CreditCard, 
   Plus, 
@@ -32,10 +36,10 @@ export default function Wallet() {
 
   const loadWalletData = async () => {
     try {
-      const currentUser = await User.me();
+      const currentUser = await getCurrentUser();
       setUser(currentUser);
       
-      const userPaymentMethods = await PaymentMethod.filter(
+      const userPaymentMethods = await getPaymentMethods(
         { user_id: currentUser.id },
         '-created_date'
       );
@@ -48,7 +52,7 @@ export default function Wallet() {
 
   const handleAddPaymentMethod = async (methodData) => {
     try {
-      await PaymentMethod.create({
+      await createPaymentMethod({
         ...methodData,
         user_id: user.id
       });

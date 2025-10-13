@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // import { User, Remittance, FloatRequest } from '@/api/entities';
+import { getCurrentUser } from '@/api/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DollarSign, Send, Users } from 'lucide-react';
@@ -11,7 +12,7 @@ export default function AgentDashboard() {
   useEffect(() => {
     const fetchAgentData = async () => {
       try {
-        const currentAgent = await User.me();
+        const currentAgent = await getCurrentUser();
         setAgent(currentAgent);
       } catch (error) {
         console.error("Error fetching agent data:", error);

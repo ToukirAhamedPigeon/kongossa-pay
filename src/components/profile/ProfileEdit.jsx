@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // import { User } from "@/api/entities";
+import { updateUser } from "@/api/users";
 import { Edit, Save } from "lucide-react";
 
 export default function ProfileEdit({ user, onUpdate }) {
@@ -29,7 +30,7 @@ export default function ProfileEdit({ user, onUpdate }) {
   const handleSave = async () => {
     setIsUpdating(true);
     try {
-      await User.updateMyUserData(formData);
+      await updateUser(user.id, formData);
       setIsEditing(false);
       onUpdate();
     } catch (error) {

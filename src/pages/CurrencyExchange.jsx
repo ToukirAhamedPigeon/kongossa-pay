@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from 'react';
 // import { InvokeLLM } from '@/api/integrations';
 // import { User, Transaction, PaymentMethod } from '@/api/entities';
+import { getCurrentUser } from '@/api/auth';
+import { getPaymentMethods } from '@/api/paymentMethod';
+import { createTransaction } from '@/api/transactions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,10 +30,10 @@ export default function CurrencyExchange() {
     useEffect(() => {
         const fetchUserAndMethods = async () => {
             try {
-                const currentUser = await User.me();
+                const currentUser = await getCurrentUser();
                 setUser(currentUser);
                 
-                const methods = await PaymentMethod.filter({ user_id: currentUser.id });
+                const methods = await getPaymentMethods({ user_id: currentUser.id });
                 setPaymentMethods(methods);
                 if (methods.length > 0) {
                     setSelectedPaymentMethod(methods[0]);
@@ -72,7 +75,7 @@ export default function CurrencyExchange() {
         setIsExchanging(true);
         try {
             // Simulate withdrawal from selected payment method
-            await Transaction.create({
+            await createTransaction({
                 sender_id: user.id,
                 recipient_id: 'fx_exchange',
                 amount: parseFloat(amount),
@@ -84,7 +87,7 @@ export default function CurrencyExchange() {
             });
             
             // Simulate deposit of converted currency
-            await Transaction.create({
+            await createTransaction({
                 sender_id: 'fx_exchange',
                 recipient_id: user.id,
                 amount: parseFloat(convertedAmount),

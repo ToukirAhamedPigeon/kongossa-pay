@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-// import { User as UserEntity } from '@/api/entities';
+import { getCurrentUser } from '@/api/auth';
 import { ArrowRight, Globe, Shield, Users, Wallet } from 'lucide-react';
 
 const onboardingSteps = [
@@ -37,12 +37,16 @@ export default function Onboarding() {
     if (currentStep < onboardingSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      UserEntity.login();
+      getCurrentUser().then(() => {
+        window.location.href = '/dashboard';
+      });
     }
   };
 
   const handleSkip = () => {
-    UserEntity.login();
+    getCurrentUser().then(() => {
+      window.location.href = '/dashboard';
+    });
   };
 
   const { icon: Icon, title, description, image } = onboardingSteps[currentStep];

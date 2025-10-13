@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 // import { User } from "@/api/entities";
+import { updateUser } from "@/api/users";
 import { Calendar, DollarSign, TrendingUp, Target } from "lucide-react";
 
 export default function BudgetSettings({ user, onUpdate }) {
@@ -25,7 +26,7 @@ export default function BudgetSettings({ user, onUpdate }) {
   const saveBudgets = async () => {
     setIsUpdating(true);
     try {
-      await User.updateMyUserData({
+      await updateUser(user.id, {
         weekly_budget: budgets.weekly,
         monthly_budget: budgets.monthly,
         yearly_budget: budgets.yearly

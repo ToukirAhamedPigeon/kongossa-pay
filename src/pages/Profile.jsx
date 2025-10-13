@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 // import { User, Transaction } from "@/api/entities";
+import { getCurrentUser } from "@/api/auth";
+import { getTransactions } from "@/api/transactions";
+
 import { 
   User as UserIcon, 
   Phone, 
@@ -34,10 +37,10 @@ export default function Profile() {
 
   const loadProfileData = async () => {
     try {
-      const currentUser = await User.me();
+      const currentUser = await getCurrentUser();
       setUser(currentUser);
       
-      const userTransactions = await Transaction.list('-created_date', 50);
+      const userTransactions = await getTransactions('-created_date', 50);
       setTransactions(userTransactions);
     } catch (error) {
       console.error("Error loading profile data:", error);

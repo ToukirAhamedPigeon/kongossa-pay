@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 // import { Transaction, User } from "@/api/entities";
+import { getTransactions } from "@/api/transactions";
+import { getCurrentUser } from "@/api/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -54,10 +56,10 @@ export default function History() {
 
     const loadTransactionHistory = async () => {
         try {
-            const currentUser = await User.me();
+            const currentUser = await getCurrentUser();
             setUser(currentUser);
             
-            const allTransactions = await Transaction.list('-created_date', 100);
+            const allTransactions = await getTransactions('-created_date', 100);
             setTransactions(allTransactions);
         } catch (error) {
             console.error("Error loading transaction history:", error);

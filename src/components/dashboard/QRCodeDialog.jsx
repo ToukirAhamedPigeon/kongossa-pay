@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QrCode, Share, Copy, Download } from 'lucide-react';
 // import { QRPayment } from '@/api/entities';
+import { createQRPayment } from '@/api/transactions';
 
 export default function QRCodeDialog({ isOpen, onClose, user }) {
   const [qrAmount, setQrAmount] = useState('');
@@ -17,7 +18,7 @@ export default function QRCodeDialog({ isOpen, onClose, user }) {
     setIsGenerating(true);
     try {
       const qrCode = `PAY_${user.id}_${Date.now()}`;
-      const qrPayment = await QRPayment.create({
+      const qrPayment = await createQRPayment({
         qr_code: qrCode,
         recipient_id: user.id,
         amount: qrAmount ? parseFloat(qrAmount) : null,

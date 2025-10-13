@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 // import { Tontine } from '@/api/entities';
+import { createTontine } from '@/api/tontines';
 
 export default function CreateTontineDialog({ isOpen, onClose, onTontineCreated, user }) {
   const [formData, setFormData] = useState({
@@ -30,7 +31,7 @@ export default function CreateTontineDialog({ isOpen, onClose, onTontineCreated,
     }
     setIsCreating(true);
     try {
-      await Tontine.create({
+      await createTontine({
         ...formData,
         contribution_amount: parseFloat(formData.contribution_amount),
         max_members: parseInt(formData.max_members, 10),

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // import { SystemSettings } from '@/api/entities';
+import { getSystemSettings, updateSystemSettings, createSystemSettings } from '@/api/systemSettings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +25,7 @@ export default function AdminFeeManagement() {
 
     const loadSettings = async () => {
         try {
-            const systemSettings = await SystemSettings.list();
+            const systemSettings = await getSystemSettings();
             if (systemSettings.length > 0) {
                 setSettings(systemSettings[0]);
             }
@@ -37,11 +38,11 @@ export default function AdminFeeManagement() {
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            const existing = await SystemSettings.list();
+            const existing = await getSystemSettings();
             if (existing.length > 0) {
-                await SystemSettings.update(existing[0].id, settings);
+                await updateSystemSettings(existing[0].id, settings);
             } else {
-                await SystemSettings.create(settings);
+                await createSystemSettings(settings);
             }
             alert('Settings saved successfully!');
         } catch (error) {
