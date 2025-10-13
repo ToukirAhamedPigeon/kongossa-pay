@@ -81,8 +81,7 @@ function AppLayout({ children, currentPageName }) {
         <header className="sticky top-0 bg-white shadow-sm">
           <div className="max-w-6xl mx-auto px-6 flex justify-between items-center h-16">
             <Link to="/" className="flex items-center gap-2">
-              <Wallet className="text-blue-600" />
-              <h1 className="text-lg font-bold">KongossaPay</h1>
+              <img src="/logo.png" alt="KongossaPay Logo" className="h-12 w-full" />
             </Link>
             <div className="flex items-center gap-4">
               {(!accessToken || !user) ? (
@@ -114,9 +113,9 @@ function AppLayout({ children, currentPageName }) {
   return (
     <div className="min-h-screen flex bg-gray-50">
       <aside className="w-72 bg-white border-r p-6 hidden md:block">
-        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-          <Wallet className="text-blue-600" /> KongossaPay
-        </h2>
+        <Link to="/" className="flex items-center gap-2">
+              <img src="/logo.png" alt="KongossaPay Logo" className="h-12 w-36" />
+        </Link>
         <div className="flex items-center gap-3 mb-6">
           <img src={user?.profileImage || `https://avatar.vercel.sh/${user.email}`} alt={user.fullName} className="w-10 h-10 rounded-full" />
           <div>
