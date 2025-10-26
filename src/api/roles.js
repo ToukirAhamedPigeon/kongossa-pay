@@ -2,6 +2,10 @@ import api from "../lib/axios";
 
 const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:3000";
 
+// -----------------------------
+// Roles API
+// -----------------------------
+
 // Create role
 export const createRole = async (data) => {
   const res = await api.post(`${API_BASE}/roles`, data);
@@ -47,5 +51,49 @@ export const removeRoleFromUser = async (userId, roleId) => {
 // Get user roles
 export const getUserRoles = async (userId) => {
   const res = await api.get(`${API_BASE}/roles/user/${userId}`);
+  return res.data;
+};
+
+// -----------------------------
+// ✅ Additional Missing Calls
+// -----------------------------
+
+// Get role permissions
+export const getRolePermissions = async (roleId) => {
+  const res = await api.get(`${API_BASE}/roles/${roleId}/permissions`);
+  return res.data;
+};
+
+// Assign permission(s) to role
+export const assignPermissionsToRole = async (roleId, permissionIds) => {
+  const res = await api.post(`${API_BASE}/roles/${roleId}/permissions/assign`, {
+    permissionIds,
+  });
+  return res.data;
+};
+
+// Remove permission(s) from role
+export const removePermissionsFromRole = async (roleId, permissionIds) => {
+  const res = await api.post(`${API_BASE}/roles/${roleId}/permissions/remove`, {
+    permissionIds,
+  });
+  return res.data;
+};
+
+// Get all permissions (helpful for role management UI)
+export const getAllPermissions = async () => {
+  const res = await api.get(`${API_BASE}/permissions`);
+  return res.data;
+};
+
+// Create new permission
+export const createPermission = async (data) => {
+  const res = await api.post(`${API_BASE}/permissions`, data);
+  return res.data;
+};
+
+// Delete permission
+export const deletePermission = async (id) => {
+  const res = await api.delete(`${API_BASE}/permissions/${id}`);
   return res.data;
 };

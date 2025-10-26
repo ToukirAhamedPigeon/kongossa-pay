@@ -13,6 +13,8 @@ import Dashboard from "./Dashboard";
 
 import Wallet from "./Wallet";
 
+import Budgets from "./Budgets.jsx";
+
 import SendMoney from "./SendMoney";
 
 import Tontine from "./Tontine";
@@ -65,6 +67,7 @@ const PAGES = {
     Dashboard: Dashboard,
     
     Wallet: Wallet,
+    Budgets: Budgets,
     
     SendMoney: SendMoney,
     
@@ -137,6 +140,7 @@ function PagesContent() {
                 <Route path="/Dashboard" element={<Dashboard />} />
                 
                 <Route path="/Wallet" element={<Wallet />} />
+                <Route path="/Budgets" element={<Budgets />} />
                 
                 <Route path="/SendMoney" element={<SendMoney />} />
                 

@@ -2,7 +2,23 @@ import { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { createPageUrl } from "@/utils";
-import { LayoutDashboard, Wallet, Send, History, Briefcase, Coins, User, LogOut } from "lucide-react";
+import { 
+  Wallet,
+  Send,
+  Briefcase,
+  Coins,
+  History,
+  Banknote,
+  User,
+  Users,
+  Shield,
+  Settings,
+  FolderKanban,
+  ListChecks,
+  Coins as Tontine,
+  PlusCircle,
+  MailPlus,
+  BookOpen, LayoutDashboard, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LanguageProvider, useTranslation } from "@/components/common/LanguageProvider";
@@ -31,6 +47,15 @@ function AppLayout({ children, currentPageName }) {
   // Redirect logic
   useEffect(() => {
   if (!loading) {
+    // console.log('accessToken',accessToken)
+    // console.log('user',user)
+    // console.log('currentPageName',currentPageName)
+    // console.log('accessToken && user && currentPageName === "Login"',(accessToken && user && currentPageName === "Login"))
+    // console.log('!accessToken',!accessToken)
+    // console.log('!user',!user)
+    // console.log('(!accessToken || !user)',(!accessToken || !user))
+    // console.log('!isMarketingPage',!isMarketingPage)
+    // console.log('(!accessToken || !user) && !isMarketingPage',((!accessToken || !user) && !isMarketingPage))
     // 1️⃣ Logged-in users cannot access Login page
     if (accessToken && user && currentPageName === "Login") {
       navigate("/Dashboard", { replace: true });
@@ -63,14 +88,76 @@ function AppLayout({ children, currentPageName }) {
   };
 
   const userNavItems = [
-    { title: t("Dashboard"), url: createPageUrl("Dashboard"), icon: LayoutDashboard },
-    { title: t("Wallet"), url: createPageUrl("Wallet"), icon: Wallet },
-    { title: t("Send Money"), url: createPageUrl("SendMoney"), icon: Send },
-    { title: t("Invest"), url: createPageUrl("Invest"), icon: Briefcase },
-    { title: t("Exchange"), url: createPageUrl("Exchange"), icon: Coins },
-    { title: t("History"), url: createPageUrl("History"), icon: History },
-    { title: t("Profile"), url: createPageUrl("Profile"), icon: User },
-  ];
+  {
+    title: t("Dashboard"),
+    url: createPageUrl("Dashboard"),
+    icon: LayoutDashboard,
+  },
+    {
+    title: t("Budget Management"),
+    icon: FolderKanban,
+    children: [
+      { title: t("My Budgets"), url: createPageUrl("Budgets"), icon: BookOpen },
+      { title: t("Categories"), url: createPageUrl("BudgetCategories"), icon: ListChecks },
+      { title: t("Expenses"), url: createPageUrl("Expenses"), icon: Coins },
+      { title: t("New Budget"), url: createPageUrl("NewBudget"), icon: PlusCircle },
+    ],
+  },
+  {
+    title: t("E-Tontine"),
+    icon: Banknote ,
+    children: [
+      { title: t("My Tontines"), url: createPageUrl("MyTontines"), icon: Tontine },
+      { title: t("Invitations"), url: createPageUrl("TontineInvitations"), icon: MailPlus },
+      { title: t("Create Tontine"), url: createPageUrl("CreateTontine"), icon: PlusCircle },
+    ],
+  },
+  {
+    title: t("Wallet"),
+    url: createPageUrl("Wallet"),
+    icon: Wallet,
+  },
+  {
+    title: t("Send Money"),
+    url: createPageUrl("SendMoney"),
+    icon: Send,
+  },
+  {
+    title: t("Invest"),
+    url: createPageUrl("Invest"),
+    icon: Briefcase,
+  },
+  {
+    title: t("Exchange"),
+    url: createPageUrl("Exchange"),
+    icon: Coins,
+  },
+  {
+    title: t("History"),
+    url: createPageUrl("History"),
+    icon: History,
+  },
+  {
+    title: t("Manage Users"),
+    url: createPageUrl("ManageUsers"),
+    icon: Users,
+  },
+  {
+    title: t("Manage Access"),
+    url: createPageUrl("ManageAccess"),
+    icon: Shield,
+  },
+  {
+    title: t("Settings"),
+    url: createPageUrl("Settings"),
+    icon: Settings,
+  },
+  {
+    title: t("Profile"),
+    url: createPageUrl("Profile"),
+    icon: User,
+  },
+];
 
   if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
 
@@ -113,29 +200,71 @@ function AppLayout({ children, currentPageName }) {
   return (
     <div className="min-h-screen flex bg-gray-50">
       <aside className="w-72 bg-white border-r p-6 hidden md:block">
-        <Link to="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="KongossaPay Logo" className="h-12 w-36" />
+        <Link to="/" className="flex items-center gap-2 mb-4">
+          <img src="/logo.png" alt="KongossaPay Logo" className="h-12 w-36" />
         </Link>
+
         <div className="flex items-center gap-3 mb-6">
-          <img src={user?.profileImage || `https://avatar.vercel.sh/${user.email}`} alt={user.fullName} className="w-10 h-10 rounded-full" />
+          <img
+            src={user?.profileImage || `https://avatar.vercel.sh/${user.email}`}
+            alt={user.fullName}
+            className="w-10 h-10 rounded-full"
+          />
           <div>
             <p className="font-medium">{user.fullName}</p>
             <Badge>{user.role}</Badge>
           </div>
         </div>
+
         <nav>
           <ul className="space-y-1">
             {userNavItems.map((item) => (
               <li key={item.title}>
-                <Link to={item.url} className={`flex items-center gap-3 px-3 py-2 rounded-md ${location.pathname === item.url ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-blue-50"}`}>
-                  <item.icon className="w-5 h-5" /> {item.title}
-                </Link>
+                {item.children ? (
+                  <div>
+                    <div className="flex items-center gap-3 px-3 py-2 font-semibold text-gray-800">
+                      <item.icon className="w-5 h-5" /> {item.title}
+                    </div>
+                    <ul className="ml-8 mt-1 space-y-1">
+                      {item.children.map((sub) => (
+                        <li key={sub.title}>
+                          <Link
+                            to={sub.url}
+                            className={`flex items-center gap-3 px-3 py-2 rounded-md ${
+                              location.pathname === sub.url
+                                ? "bg-blue-600 text-white"
+                                : "text-gray-700 hover:bg-blue-50"
+                            }`}
+                          >
+                            <sub.icon className="w-4 h-4" /> {sub.title}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <Link
+                    to={item.url}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-md ${
+                      location.pathname === item.url
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-700 hover:bg-blue-50"
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" /> {item.title}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
         </nav>
+
         <div className="mt-6">
-          <Button variant="outline" onClick={handleLogout} className="w-full justify-start text-red-600">
+          <Button
+            variant="outline"
+            onClick={handleLogout}
+            className="w-full justify-start text-red-600"
+          >
             <LogOut className="w-4 h-4 mr-2" /> Logout
           </Button>
         </div>
@@ -148,7 +277,7 @@ function AppLayout({ children, currentPageName }) {
 export default function Layout({ children, currentPageName }) {
   return (
     <LanguageProvider>
-      <PWAInstaller />
+      {/* <PWAInstaller /> */}
       <AppLayout currentPageName={currentPageName}>{children}</AppLayout>
     </LanguageProvider>
   );

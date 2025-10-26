@@ -25,3 +25,10 @@ export const deleteUser = async (id) => {
   const res = await api.delete(`${API_BASE}/users/${id}`);
   return res.data;
 };
+
+export const downloadUserDocument = async (id) => {
+  const res = await api.get(`${API_BASE}/users/${id}/download-document`, {
+    responseType: "blob", // important for file download
+  });
+  return res.data;
+};

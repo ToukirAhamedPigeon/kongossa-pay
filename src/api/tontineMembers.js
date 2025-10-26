@@ -25,3 +25,17 @@ export const deleteTontineMember = async (id) => {
   const res = await api.delete(`${API_BASE}/tontine-members/${id}`);
   return res.data;
 };
+
+// ---------------------------
+// Missing API calls added
+// ---------------------------
+
+export const getTontineMemberStats = async (id) => {
+  const res = await api.get(`${API_BASE}/tontine-members/${id}/stats`);
+  return res.data;
+};
+
+export const createTontineContribution = async (id, data) => {
+  const res = await api.post(`${API_BASE}/tontine-members/${id}/contributions`, data);
+  return res.data;
+};

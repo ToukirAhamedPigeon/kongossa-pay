@@ -25,3 +25,62 @@ export const deleteTontine = async (id) => {
   const res = await api.delete(`${API_BASE}/tontines/${id}`);
   return res.data;
 };
+
+// --------------------
+// Additional Tontine API endpoints
+// --------------------
+
+export const getTontineCreateForm = async () => {
+  const res = await api.get(`${API_BASE}/tontines/create`);
+  return res.data;
+};
+
+export const getTontineEditForm = async (id) => {
+  const res = await api.get(`${API_BASE}/tontines/${id}/edit`);
+  return res.data;
+};
+
+export const getTontineStats = async (id) => {
+  const res = await api.get(`${API_BASE}/tontines/${id}/stats`);
+  return res.data;
+};
+
+export const getTontineDashboard = async (id) => {
+  const res = await api.get(`${API_BASE}/tontines/${id}/dashboard`);
+  return res.data;
+};
+
+export const addTontineMember = async (id, data) => {
+  const res = await api.post(`${API_BASE}/tontines/${id}/members`, data);
+  return res.data;
+};
+
+export const addTontineInvite = async (id, data) => {
+  const res = await api.post(`${API_BASE}/tontines/${id}/invites`, data);
+  return res.data;
+};
+
+export const approveTontineInvite = async (id, inviteId) => {
+  const res = await api.post(`${API_BASE}/tontines/${id}/invites/${inviteId}/approve`);
+  return res.data;
+};
+
+export const removeTontineMember = async (id, memberId) => {
+  const res = await api.post(`${API_BASE}/tontines/${id}/members/${memberId}/remove`);
+  return res.data;
+};
+
+export const getTontineContributeForm = async (id) => {
+  const res = await api.get(`${API_BASE}/tontines/${id}/contribute`);
+  return res.data;
+};
+
+export const contributeToTontine = async (id, data) => {
+  const res = await api.post(`${API_BASE}/tontines/${id}/contribute`, data);
+  return res.data;
+};
+
+export const payoutTontineMember = async (id, memberId, data) => {
+  const res = await api.post(`${API_BASE}/tontines/${id}/payouts/${memberId}`, data);
+  return res.data;
+};
