@@ -54,6 +54,7 @@ import AgentDashboard from "./AgentDashboard";
 import Onboarding from "./Onboarding";
 
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import CreateBudget from "./CreateBudget.jsx";
 
 const PAGES = {
     Login: LoginPage,
@@ -72,6 +73,7 @@ const PAGES = {
     
     Wallet: Wallet,
     Budgets: Budgets,
+    CreateBudget: CreateBudget,
     
     SendMoney: SendMoney,
     
@@ -149,6 +151,7 @@ function PagesContent() {
                 
                 <Route path="/Wallet" element={<Wallet />} />
                 <Route path="/Budgets" element={<Budgets />} />
+                <Route path="/CreateBudget" element={<CreateBudget />} />
 
                  <Route path="/BudgetCategoryList" element={<BudgetCategoryList />} />
 

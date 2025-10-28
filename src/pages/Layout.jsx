@@ -100,7 +100,7 @@ function AppLayout({ children, currentPageName }) {
       { title: t("My Budgets"), url: createPageUrl("Budgets"), icon: BookOpen },
       { title: t("BudgetCategoryList"), url: createPageUrl("BudgetCategoryList"), icon: ListChecks },
       { title: t("ExpensesList"), url: createPageUrl("ExpensesList"), icon: Coins },
-      { title: t("New Budget"), url: createPageUrl("NewBudget"), icon: PlusCircle },
+      { title: t("Create Budget"), url: createPageUrl("CreateBudget"), icon: PlusCircle },
     ],
   },
   {
