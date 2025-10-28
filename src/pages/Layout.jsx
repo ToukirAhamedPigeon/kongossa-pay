@@ -98,8 +98,8 @@ function AppLayout({ children, currentPageName }) {
     icon: FolderKanban,
     children: [
       { title: t("My Budgets"), url: createPageUrl("Budgets"), icon: BookOpen },
-      { title: t("Categories"), url: createPageUrl("BudgetCategories"), icon: ListChecks },
-      { title: t("Expenses"), url: createPageUrl("Expenses"), icon: Coins },
+      { title: t("BudgetCategoryList"), url: createPageUrl("BudgetCategoryList"), icon: ListChecks },
+      { title: t("ExpensesList"), url: createPageUrl("ExpensesList"), icon: Coins },
       { title: t("New Budget"), url: createPageUrl("NewBudget"), icon: PlusCircle },
     ],
   },

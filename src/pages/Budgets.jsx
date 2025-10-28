@@ -1,175 +1,343 @@
-
-import React, { useState, useEffect } from "react";
-// import { User, PaymentMethod } from "@/api/entities";
-import { getCurrentUser } from "@/api/auth";
-import { getPaymentMethods, createPaymentMethod } from "@/api/paymentMethod";
-import { updateUser } from "@/api/users";
-
-import { 
-  CreditCard, 
-  Plus, 
-  Trash2, 
-  Shield, 
-  Star,
-  Landmark, // Changed from Bank to Landmark
-  Smartphone,
-  Wallet as WalletIcon
+import React, { useEffect, useState } from "react";
+import {
+  DollarSign,
+  Edit,
+  Eye,
+  Filter,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+  TrendingUp,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
+import { Input } from "../components/ui/input";
+import { Progress } from "../components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import Breadcrumbs from "@/components/dashboard/Breadcumbs";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { getBudgets } from "../api/budget";
 
-import PaymentMethodCard from "../components/wallet/PaymentMethodCard";
-import AddPaymentMethodForm from "../components/wallet/AddPaymentMethodForm";
-import WalletBalance from "../components/wallet/WalletBalance";
 
-export default function Budgets() {
-  const [user, setUser] = useState(null);
-  const [paymentMethods, setPaymentMethods] = useState([]);
-  const [showAddMethod, setShowAddMethod] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+export default function BudgetsList() {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [budgets, setBudgets] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+  const [selectedPeriod, setSelectedPeriod] = useState(searchParams.get("period") || "");
+
+  const currentPage = Number(searchParams.get("page")) || 1;
+
+  // 🔹 Fetch budgets from API
+  const fetchBudgets = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = {
+        search: searchTerm || undefined,
+        period: selectedPeriod === "all" ? undefined : selectedPeriod,
+        page: currentPage,
+      };
+      const data = await getBudgets({ params }); // support query params
+      setBudgets(data);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load budgets. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    loadWalletData();
-  }, []);
+    fetchBudgets();
+  }, [searchParams]); // refetch when filters or pagination change
 
-  const loadWalletData = async () => {
-    try {
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
-      
-      const userPaymentMethods = await getPaymentMethods(
-        { user_id: currentUser.id },
-        '-created_date'
-      );
-      setPaymentMethods(userPaymentMethods);
-    } catch (error) {
-      console.error("Error loading wallet data:", error);
-    }
-    setIsLoading(false);
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const params = new URLSearchParams(searchParams);
+    if (searchTerm) params.set("search", searchTerm);
+    else params.delete("search");
+    params.set("page", 1);
+    setSearchParams(params);
   };
 
-  const handleAddPaymentMethod = async (methodData) => {
-    try {
-      await createPaymentMethod({
-        ...methodData,
-        user_id: user.id
-      });
-      loadWalletData();
-      setShowAddMethod(false);
-    } catch (error) {
-      console.error("Error adding payment method:", error);
+  const handlePeriodFilter = (period) => {
+    setSelectedPeriod(period);
+    const params = new URLSearchParams(searchParams);
+    if (period && period !== "all") params.set("period", period);
+    else params.delete("period");
+    params.set("page", 1);
+    setSearchParams(params);
+  };
+
+  const handlePageChange = (page) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", page);
+    setSearchParams(params);
+  };
+
+  const getPeriodBadgeColor = (period) => {
+    switch (period) {
+      case "weekly":
+        return "bg-blue-100 text-blue-800";
+      case "monthly":
+        return "bg-green-100 text-green-800";
+      case "yearly":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  if (isLoading) {
+  const breadcrumbs = [
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Budget Management" },
+    { label: "Budgets" },
+  ];
+
+  // --- UI Rendering ---
+  if (loading)
     return (
-      <div className="p-6 space-y-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-48"></div>
-          <div className="h-40 bg-gray-200 rounded-xl"></div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Array(3).fill(0).map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
-            ))}
-          </div>
-        </div>
+      <div className="flex justify-center py-16 text-muted-foreground">
+        Loading budgets...
       </div>
     );
-  }
+
+  if (error)
+    return (
+      <div className="text-center py-16 text-red-600">
+        {error} <Button onClick={fetchBudgets}>Retry</Button>
+      </div>
+    );
 
   return (
-    <div className="p-6 space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-6">
+      <Breadcrumbs breadcrumbs={breadcrumbs} />
+
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">My Wallet</h1>
-          <p className="text-slate-500 mt-1">
-            Manage your balance and payment methods
+          <h1 className="text-3xl font-bold tracking-tight">My Budgets</h1>
+          <p className="text-muted-foreground">
+            Manage your spending limits and track your financial goals.
           </p>
         </div>
-        
-        <Button 
-          onClick={() => setShowAddMethod(true)}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Payment Method
+        <Button onClick={() => navigate("/budgets/create")}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Budget
         </Button>
       </div>
 
-      {/* Wallet Balance */}
-      <WalletBalance user={user} />
-
-      {/* Payment Methods Section */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-slate-900">Payment Methods</h2>
-          <Badge variant="outline" className="bg-blue-50 text-blue-700">
-            {paymentMethods.length} method{paymentMethods.length !== 1 ? 's' : ''}
-          </Badge>
-        </div>
-
-        {paymentMethods.length === 0 ? (
-          <Card className="border-dashed border-2 border-gray-300">
-            <CardContent className="p-12 text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CreditCard className="w-8 h-8 text-gray-400" />
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end">
+            <form onSubmit={handleSearch} className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search budgets..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">No Payment Methods</h3>
-              <p className="text-slate-500 mb-6">
-                Add your first payment method to start sending and receiving money
-              </p>
-              <Button onClick={() => setShowAddMethod(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Payment Method
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {paymentMethods.map((method) => (
-              <PaymentMethodCard 
-                key={method.id} 
-                method={method}
-                onRefresh={loadWalletData}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+            </form>
 
-      {/* Security Notice */}
-      <Card className="border-green-200 bg-green-50">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <Shield className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-green-900 mb-1">Secure & Protected</h3>
-              <p className="text-green-700 text-sm">
-                Your payment information is encrypted and protected with bank-level security. 
-                We never store your full card details and use secure tokenization.
-              </p>
+            <div className="flex gap-2">
+              <Select value={selectedPeriod} onValueChange={handlePeriodFilter}>
+                <SelectTrigger className="w-32">
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Periods</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button type="submit" onClick={handleSearch}>
+                <Search className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Add Payment Method Dialog */}
-      <Dialog open={showAddMethod} onOpenChange={setShowAddMethod}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Payment Method</DialogTitle>
-          </DialogHeader>
-          <AddPaymentMethodForm 
-            onSubmit={handleAddPaymentMethod}
-            onCancel={() => setShowAddMethod(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      {/* Budgets List */}
+      {!budgets?.data?.length ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No budgets found</h3>
+            <p className="text-muted-foreground text-center mb-6">
+              {searchTerm || selectedPeriod
+                ? "Try adjusting your search criteria or filters."
+                : "Get started by creating your first budget to track your spending."}
+            </p>
+            <Button onClick={() => navigate("/budgets/create")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Your First Budget
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {budgets.data.map((budget) => (
+            <Card key={budget.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">{budget.name}</CardTitle>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="secondary" className={getPeriodBadgeColor(budget.period)}>
+                        {budget.period}
+                      </Badge>
+                      <Badge variant="outline">{budget.categories_count} categories</Badge>
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => navigate(`/budgets/${budget.id}`)}>
+                        <Eye className="mr-2 h-4 w-4" /> View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/budgets/${budget.id}/edit`)}>
+                        <Edit className="mr-2 h-4 w-4" /> Edit Budget
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600">
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete Budget
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Budget</p>
+                      <p className="text-2xl font-bold">${budget.total_amount.toLocaleString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">Spent</p>
+                      <p
+                        className={`text-lg font-semibold ${
+                          budget.is_over_budget ? "text-red-600" : "text-gray-900"
+                        }`}
+                      >
+                        ${budget.total_spent.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Usage</span>
+                      <span
+                        className={`font-medium ${
+                          budget.is_over_budget ? "text-red-600" : "text-gray-900"
+                        }`}
+                      >
+                        {budget.usage_percentage.toFixed(1)}%
+                      </span>
+                    </div>
+                    <Progress
+                      value={Math.min(budget.usage_percentage, 100)}
+                      className={`h-2 ${budget.is_over_budget ? "bg-red-100" : ""}`}
+                    />
+                    {budget.is_over_budget && (
+                      <div className="flex items-center gap-1 text-xs text-red-600">
+                        <TrendingUp className="h-3 w-3" />
+                        Over budget by ${(
+                          budget.total_spent - budget.total_amount
+                        ).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <span className="text-sm text-muted-foreground">Remaining</span>
+                    <span
+                      className={`font-medium ${
+                        budget.is_over_budget ? "text-red-600" : "text-green-600"
+                      }`}
+                    >
+                      ${(
+                        budget.total_amount - budget.total_spent
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => navigate(`/budgets/${budget.id}`)}
+                    >
+                      <Eye className="mr-2 h-3 w-3" /> View
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        navigate(`/budgets/${budget.id}/expenses/create`)
+                      }
+                    >
+                      <Plus className="mr-2 h-3 w-3" /> Add Expense
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {budgets?.last_page > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing {(budgets.current_page - 1) * budgets.per_page + 1} to{" "}
+            {Math.min(budgets.current_page * budgets.per_page, budgets.total)} of{" "}
+            {budgets.total} budgets
+          </p>
+          <div className="flex gap-2">
+            {budgets.current_page > 1 && (
+              <Button variant="outline" size="sm" onClick={() => handlePageChange(budgets.current_page - 1)}>
+                Previous
+              </Button>
+            )}
+            {budgets.current_page < budgets.last_page && (
+              <Button variant="outline" size="sm" onClick={() => handlePageChange(budgets.current_page + 1)}>
+                Next
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

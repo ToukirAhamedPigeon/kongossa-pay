@@ -9,47 +9,56 @@ const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:3000";
 
 // GET all expenses
 export const getExpenses = async () => {
-  return api.get(`${API_BASE}/expenses`);
+  const res = api.get(`${API_BASE}/expenses`);
+  return res.data;
 };
 
 // GET single expense by ID
 export const getExpenseById = async (id) => {
-  return api.get(`${API_BASE}/expenses/${id}`);
+  const res = api.get(`${API_BASE}/expenses/${id}`);
+  return res.data;
 };
 
 // GET form data for creating expense
 export const getExpenseCreateForm = async () => {
-  return api.get(`${API_BASE}/expenses/create`);
+  const res = api.get(`${API_BASE}/expenses/create`);
+  return res.data;
 };
 
 // POST create new expense
 export const createExpense = async (data) => {
-  return api.post(`${API_BASE}/expenses`, data);
+  const res = api.post(`${API_BASE}/expenses`, data);
+  return res.data;
 };
 
 // PUT update expense by ID
 export const updateExpense = async (id, data) => {
-  return api.put(`${API_BASE}/expenses/${id}`, data);
+  const res = api.put(`${API_BASE}/expenses/${id}`, data);
+  return res.data;
 };
 
 // DELETE expense by ID
 export const deleteExpense = async (id) => {
-  return api.delete(`${API_BASE}/expenses/${id}`);
+  const res = api.delete(`${API_BASE}/expenses/${id}`);
+  return res.data;
 };
 
 // GET edit form for expense
 export const getExpenseEditForm = async (id) => {
-  return api.get(`${API_BASE}/expenses/${id}/edit`);
+  const res = api.get(`${API_BASE}/expenses/${id}/edit`);
+  return res.data;
 };
 
 // GET expenses by user
 export const getExpensesByUser = async (userId) => {
-  return api.get(`${API_BASE}/expenses/user/${userId}`);
+  const res = api.get(`${API_BASE}/expenses/user/${userId}`);
+  return res.data;
 };
 
 // GET user expense stats
 export const getExpenseStatsByUser = async (userId) => {
-  return api.get(`${API_BASE}/expenses/stats/user`, {
+  const res = api.get(`${API_BASE}/expenses/stats/user`, {
     params: { userId },
   });
+  return res.data;
 };

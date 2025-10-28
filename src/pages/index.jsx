@@ -15,6 +15,10 @@ import Wallet from "./Wallet";
 
 import Budgets from "./Budgets.jsx";
 
+import BudgetCategoryList from "./BudgetCategoryList.jsx";
+
+import ExpensesList from "./ExpensesList.jsx"
+
 import SendMoney from "./SendMoney";
 
 import Tontine from "./Tontine";
@@ -102,7 +106,11 @@ const PAGES = {
     AgentDashboard: AgentDashboard,
     
     Onboarding: Onboarding,
-    
+
+    BudgetCategoryList: BudgetCategoryList,
+
+    ExpensesList: ExpensesList
+
 }
 
 function _getCurrentPage(url) {
@@ -141,6 +149,10 @@ function PagesContent() {
                 
                 <Route path="/Wallet" element={<Wallet />} />
                 <Route path="/Budgets" element={<Budgets />} />
+
+                 <Route path="/BudgetCategoryList" element={<BudgetCategoryList />} />
+
+                 <Route path="/ExpensesList" element={<ExpensesList />} />
                 
                 <Route path="/SendMoney" element={<SendMoney />} />
                 
