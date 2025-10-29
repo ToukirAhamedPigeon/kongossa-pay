@@ -15,6 +15,11 @@ import Wallet from "./Wallet";
 
 import Budgets from "./Budgets.jsx";
 
+import CreateBudget from "./CreateBudget.jsx";
+
+import BudgetDetail from "./BudgetDetail.jsx";
+import BudgetEdit from "./BudgetEdit.jsx";
+
 import BudgetCategoryList from "./BudgetCategoryList.jsx";
 
 import ExpensesList from "./ExpensesList.jsx"
@@ -22,6 +27,8 @@ import ExpensesList from "./ExpensesList.jsx"
 import SendMoney from "./SendMoney";
 
 import Tontine from "./Tontine";
+import TontineCreate from "./TontineCreate";
+import TontineEdit from "./TontineEdit";
 
 import Profile from "./Profile";
 
@@ -54,7 +61,6 @@ import AgentDashboard from "./AgentDashboard";
 import Onboarding from "./Onboarding";
 
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
-import CreateBudget from "./CreateBudget.jsx";
 
 const PAGES = {
     Login: LoginPage,
@@ -74,10 +80,14 @@ const PAGES = {
     Wallet: Wallet,
     Budgets: Budgets,
     CreateBudget: CreateBudget,
+    BudgetDetail:BudgetDetail,
+    BudgetEdit:BudgetEdit,
     
     SendMoney: SendMoney,
     
     Tontine: Tontine,
+    TontineCreate:TontineCreate,
+    TontineEdit:TontineEdit,
     
     Profile: Profile,
     
@@ -152,6 +162,8 @@ function PagesContent() {
                 <Route path="/Wallet" element={<Wallet />} />
                 <Route path="/Budgets" element={<Budgets />} />
                 <Route path="/CreateBudget" element={<CreateBudget />} />
+                <Route path="/budgets/:id/edit" element={<BudgetEdit />} />
+                <Route path="/budgets/:id" element={<BudgetDetail />} />
 
                  <Route path="/BudgetCategoryList" element={<BudgetCategoryList />} />
 
@@ -160,6 +172,8 @@ function PagesContent() {
                 <Route path="/SendMoney" element={<SendMoney />} />
                 
                 <Route path="/Tontine" element={<Tontine />} />
+                <Route path="/TontineCreate" element={<TontineCreate />} />
+                <Route path="/tontines/:id/edit" element={<TontineEdit />} />
                 
                 <Route path="/Profile" element={<Profile />} />
                 
