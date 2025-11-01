@@ -36,7 +36,7 @@ function AppLayout({ children, currentPageName }) {
 
   const { user, accessToken, loading } = useSelector((state) => state.auth);
 
-  const marketingPages = ["Home", "Personal", "Business", "Agent", "About", "Support", "Privacy", "Terms", "Login", "Register"];
+  const marketingPages = ["Home", "Personal", "Business", "Agent", "About", "Support", "Privacy", "Terms", "Login", "Register", "PublicInvitation"];
   const isMarketingPage = marketingPages.includes(currentPageName);
 
   // Refresh token on mount
@@ -107,9 +107,9 @@ function AppLayout({ children, currentPageName }) {
     title: t("E-Tontine"),
     icon: Banknote ,
     children: [
-      { title: t("My Tontines"), url: createPageUrl("MyTontines"), icon: Tontine },
-      { title: t("Invitations"), url: createPageUrl("TontineInvitations"), icon: MailPlus },
-      { title: t("Create Tontine"), url: createPageUrl("CreateTontine"), icon: PlusCircle },
+      { title: t("My Tontines"), url: createPageUrl("TontinesList"), icon: Tontine },
+      { title: t("Invitations"), url: createPageUrl("TontineInvite"), icon: MailPlus },
+      { title: t("Tontine Create"), url: createPageUrl("TontineCreate"), icon: PlusCircle },
     ],
   },
   {
@@ -139,17 +139,17 @@ function AppLayout({ children, currentPageName }) {
   },
   {
     title: t("Manage Users"),
-    url: createPageUrl("ManageUsers"),
+    url: createPageUrl("UserList"),
     icon: Users,
   },
   {
     title: t("Manage Access"),
-    url: createPageUrl("ManageAccess"),
+    url: createPageUrl("RoleList"),
     icon: Shield,
   },
   {
     title: t("Settings"),
-    url: createPageUrl("Settings"),
+    url: createPageUrl("Profile"),
     icon: Settings,
   },
   {

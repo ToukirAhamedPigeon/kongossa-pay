@@ -169,8 +169,8 @@ export function TontineForm({
                   </SelectTrigger>
                   <SelectContent>
                     {tontineTypes.map((type) => (
-                      <SelectItem key={type.id} value={String(type.id)}>
-                        {type.name}
+                      <SelectItem key={type.value} value={String(type.value)} title={type.description}>
+                        {type.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

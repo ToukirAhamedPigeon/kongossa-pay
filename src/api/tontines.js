@@ -8,7 +8,7 @@ export const createTontine = async (data) => {
 
 export const getTontines = async (params = {}) => {
   const res = await api.get(`${API_BASE}/tontines`, { params });
-  return res.data;
+  return res;
 };
 
 export const getTontineById = async (id) => {
@@ -32,6 +32,11 @@ export const deleteTontine = async (id) => {
 
 export const getTontineCreateForm = async () => {
   const res = await api.get(`${API_BASE}/tontines/create`);
+  return res.data;
+};
+
+export const getTontineTypes = async () => {
+  const res = await api.get(`${API_BASE}/tontines/types`);
   return res.data;
 };
 

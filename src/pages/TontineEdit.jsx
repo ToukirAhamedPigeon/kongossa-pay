@@ -4,7 +4,7 @@ import Breadcrumbs from "@/components/dashboard/Breadcumbs";
 import { TontineForm } from "@/components/dashboard/TontineForm";
 // import { useToast } from "@/hooks/use-toast";
 import {
-  getTontine,
+  getTontineById,
   updateTontine,
   getTontineTypes,
 } from "../api/tontines"; // adjust your API imports
@@ -21,7 +21,7 @@ export default function EditTontinePage() {
 
   const breadcrumbs = [
     { label: "Dashboard", href: "/dashboard" },
-    { label: "Tontine System" },
+    { label: "E-Tontine" },
     { label: "My Tontines", href: "/tontines" },
     { label: tontine?.name || "Loading..." },
     { label: "Edit" },
@@ -33,7 +33,7 @@ export default function EditTontinePage() {
     setError("");
     try {
       const [tontineRes, typesRes] = await Promise.all([
-        getTontine(id),
+        getTontineById(id),
         getTontineTypes(),
       ]);
       setTontine(tontineRes);
@@ -67,7 +67,7 @@ export default function EditTontinePage() {
       console.error(err);
     //   toast({
     //     title: "Update Failed",
-    //     description: "Failed to update tontine. Try again later.",
+    //     description: "Failed to update tontine. Try again later.",cleart
     //   });
     }
   };

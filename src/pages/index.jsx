@@ -21,16 +21,38 @@ import BudgetDetail from "./BudgetDetail.jsx";
 import BudgetEdit from "./BudgetEdit.jsx";
 
 import BudgetCategoryList from "./BudgetCategoryList.jsx";
+import BudgetCategoryEdit from "./BudgetCategoryEdit.jsx";
+import BudgetCategoryCreate from "./BudgetCategoryCreate.jsx";
+import BudgetCategoryShow from "./BudgetCategoryShow.jsx";
 
 import ExpensesList from "./ExpensesList.jsx"
+import ExpenseCreate from "./ExpenseCreate.jsx"
+
+
 
 import SendMoney from "./SendMoney";
 
 import Tontine from "./Tontine";
 import TontineCreate from "./TontineCreate";
 import TontineEdit from "./TontineEdit";
+import TontinesList from "./TontinesList";
+import TontineInvite from "./TontineInvite";
+import PublicInvitation from "./PublicInvitation";
+
+import UserList from "./UserList";
+import UserCreate from "./UserCreate";
+import UserEdit from "./UserEdit";
+import UserShow from "./UserShow";
+
+import RoleList from "./RoleList";
+
+import CheckoutSuccess from "./CheckoutSuccess";
+
+
 
 import Profile from "./Profile";
+import Password from "./Password.jsx";
+import Appearance from "./Appearance.jsx";
 
 import Home from "./Home";
 
@@ -85,11 +107,26 @@ const PAGES = {
     
     SendMoney: SendMoney,
     
+    UserList: UserList,
+    UserCreate:UserCreate,
+    UserEdit:UserEdit,
+    UserShow:UserShow,
+
+    
+    RoleList: RoleList,
+    
+    CheckoutSuccess: CheckoutSuccess,
+    
     Tontine: Tontine,
     TontineCreate:TontineCreate,
     TontineEdit:TontineEdit,
+    TontinesList:TontinesList,
+    TontineInvite:TontineInvite,
+    PublicInvitation:PublicInvitation,
     
     Profile: Profile,
+    Password: Password,
+    Appearance: Appearance,
     
     Home: Home,
     
@@ -120,8 +157,16 @@ const PAGES = {
     Onboarding: Onboarding,
 
     BudgetCategoryList: BudgetCategoryList,
+    BudgetCategoryEdit: BudgetCategoryEdit,
+    BudgetCategoryCreate: BudgetCategoryCreate,
+    BudgetCategoryShow: BudgetCategoryShow,
 
-    ExpensesList: ExpensesList
+
+
+    ExpensesList: ExpensesList,
+    ExpenseCreate: ExpenseCreate,
+
+
 
 }
 
@@ -165,17 +210,31 @@ function PagesContent() {
                 <Route path="/budgets/:id/edit" element={<BudgetEdit />} />
                 <Route path="/budgets/:id" element={<BudgetDetail />} />
 
+                <Route path="/Tontine" element={<Tontine />} />
+                <Route path="/TontineCreate" element={<TontineCreate />} />
+                <Route path="/tontines/:id/edit" element={<TontineEdit />} />
+                <Route path="/TontinesList" element={<TontinesList />} />
+                <Route path="/TontineInvite" element={<TontineInvite />} />
+                <Route path="/PublicInvitation" element={<PublicInvitation />} />
+                
+                <Route path="/UserList" element={<UserList />} />
+                <Route path="/UserCreate" element={<UserCreate />} />
+                <Route path="/users/:id/edit" element={<UserEdit />} />
+                <Route path="/users/:id" element={<UserShow />} />
+
+                <Route path="/RoleList" element={<RoleList />} />                
+                
+                <Route path="/CheckoutSuccess" element={<CheckoutSuccess />} />
+                
                  <Route path="/BudgetCategoryList" element={<BudgetCategoryList />} />
 
                  <Route path="/ExpensesList" element={<ExpensesList />} />
                 
                 <Route path="/SendMoney" element={<SendMoney />} />
                 
-                <Route path="/Tontine" element={<Tontine />} />
-                <Route path="/TontineCreate" element={<TontineCreate />} />
-                <Route path="/tontines/:id/edit" element={<TontineEdit />} />
-                
                 <Route path="/Profile" element={<Profile />} />
+                <Route path="/Password" element={<Password />} />
+                <Route path="/Appearance" element={<Appearance />} />
                 
                 <Route path="/Home" element={<Home />} />
                 

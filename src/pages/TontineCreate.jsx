@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Breadcrumbs } from "./../components/dashboard/Breadcumbs";
+import  Breadcrumbs  from "@/components/dashboard/Breadcumbs";
 import { TontineForm } from "@/components/dashboard/TontineForm";
 // import { useToast } from "@/hooks/use-toast";
 import { getTontineTypes, createTontine } from "../api/tontines";
@@ -17,7 +17,7 @@ export default function CreateTontine() {
     const fetchTypes = async () => {
       try {
         const res = await getTontineTypes();
-        setTontineTypes(res.data || []);
+        setTontineTypes(res.tontineTypes || []);
       } catch (err) {
         console.error(err);
         setError("Failed to load tontine types. Please try again.");
@@ -45,7 +45,7 @@ export default function CreateTontine() {
 
   const breadcrumbs = [
     { label: "Dashboard", href: "/dashboard" },
-    { label: "Tontine System" },
+    { label: "E-Tontine" },
     { label: "My Tontines", href: "/tontines" },
     { label: "Create Tontine" },
   ];
