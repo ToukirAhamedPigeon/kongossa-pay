@@ -1,15 +1,13 @@
-import './App.css';
-import Pages from "@/pages/index.jsx";
-import { Toaster } from "@/components/ui/toaster";
-import { Provider, useDispatch, useSelector } from 'react-redux';
-import { store } from './store';
-import React, { useEffect, useState } from 'react';
-import { refreshAccessToken } from './store/authSlice';
-import ToastContainer from "./components/common/ToastContainer";
-import useNetworkToast from "@/utils/useNetworkToast";
+import React, { useEffect, useState } from "react";
+import Pages from "@/pages/index.jsx"; // your router with Layout
 import GlobalLoader from "@/components/common/GlobalLoader";
+import ToastContainer from "@/components/common/ToastContainer";
+import { Toaster } from "@/components/ui/toaster";
+import { useDispatch, useSelector } from "react-redux";
+import { refreshAccessToken } from "@/store/authSlice";
+import useNetworkToast from "@/utils/useNetworkToast";
 
-function AppWrapper() {
+export default function App() {
   useNetworkToast();
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
@@ -37,20 +35,12 @@ function AppWrapper() {
     );
   }
 
-  return <Pages />;
-}
-
-function App() {
   return (
     <>
-      <Provider store={store}>
-        <GlobalLoader />
-        <AppWrapper />
-        <ToastContainer />
-      </Provider>
+      <GlobalLoader />
+      <Pages />
+      <ToastContainer />
       <Toaster />
     </>
   );
 }
-
-export default App;

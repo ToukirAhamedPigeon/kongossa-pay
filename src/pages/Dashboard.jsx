@@ -194,7 +194,7 @@ export default function Dashboard() {
   const [showQRCode, setShowQRCode] = useState(false);
   const { t } = useTranslation();
 
-  console.log(user);
+  // console.log(user);
 
   useEffect(() => {
     loadDashboardData();

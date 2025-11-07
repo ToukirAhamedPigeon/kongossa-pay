@@ -88,7 +88,7 @@ function AppLayout({ children, currentPageName }) {
     }
   };
 
-  const userNavItems = [
+const userNavItems = [
   {
     title: t("Dashboard"),
     url: createPageUrl("Dashboard"),
@@ -113,31 +113,31 @@ function AppLayout({ children, currentPageName }) {
       { title: t("Tontine Create"), url: createPageUrl("TontineCreate"), icon: PlusCircle },
     ],
   },
-  {
-    title: t("Wallet"),
-    url: createPageUrl("Wallet"),
-    icon: Wallet,
-  },
-  {
-    title: t("Send Money"),
-    url: createPageUrl("SendMoney"),
-    icon: Send,
-  },
-  {
-    title: t("Invest"),
-    url: createPageUrl("Invest"),
-    icon: Briefcase,
-  },
-  {
-    title: t("Exchange"),
-    url: createPageUrl("Exchange"),
-    icon: Coins,
-  },
-  {
-    title: t("History"),
-    url: createPageUrl("History"),
-    icon: History,
-  },
+  // {
+  //   title: t("Wallet"),
+  //   url: createPageUrl("Wallet"),
+  //   icon: Wallet,
+  // },
+  // {
+  //   title: t("Send Money"),
+  //   url: createPageUrl("SendMoney"),
+  //   icon: Send,
+  // },
+  // {
+  //   title: t("Invest"),
+  //   url: createPageUrl("Invest"),
+  //   icon: Briefcase,
+  // },
+  // {
+  //   title: t("Exchange"),
+  //   url: createPageUrl("Exchange"),
+  //   icon: Coins,
+  // },
+  // {
+  //   title: t("History"),
+  //   url: createPageUrl("History"),
+  //   icon: History,
+  // },
   {
     title: t("Manage Users"),
     url: createPageUrl("UserList"),
@@ -153,11 +153,11 @@ function AppLayout({ children, currentPageName }) {
     url: createPageUrl("Profile"),
     icon: Settings,
   },
-  {
-    title: t("Profile"),
-    url: createPageUrl("Profile"),
-    icon: User,
-  },
+  // {
+  //   title: t("Profile"),
+  //   url: createPageUrl("Profile"),
+  //   icon: User,
+  // },
 ];
 
 
