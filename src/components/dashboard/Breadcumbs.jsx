@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function Breadcrumbs({ breadcrumbs }) {
   return (
@@ -6,9 +7,9 @@ export default function Breadcrumbs({ breadcrumbs }) {
       {breadcrumbs.map((item, i) => (
         <span key={i} className="flex items-center">
           {item.href ? (
-            <a href={item.href} className="hover:underline text-primary">
+            <Link to={item.href} className="hover:underline text-primary">
               {item.label}
-            </a>
+            </Link>
           ) : (
             <span>{item.label}</span>
           )}

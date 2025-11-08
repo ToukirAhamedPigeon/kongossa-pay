@@ -27,6 +27,7 @@ import ExpenseCreate from "@/pages/ExpenseCreate";
 import UserList from "@/pages/UserList";
 import UserCreate from "@/pages/UserCreate";
 import UserEdit from "@/pages/UserEdit";
+import UserShow from "@/pages/UserShow";
 import RoleList from "@/pages/RoleList";
 import Profile from "@/pages/Profile";
 import Password from "@/pages/Password";
@@ -72,6 +73,7 @@ export const routes = [
     { path: "/admin/users", element: <UserList />, name: "UserList", permissions: ["read:dashboard"] },
     { path: "/admin/users/create", element: <UserCreate />, name: "UserCreate", permissions: ["read:dashboard"] },
     { path: "/admin/users/:id/edit", element: <UserEdit />, name: "UserEdit", permissions: ["read:dashboard"] },
+    { path: "/admin/users/:id", element: <UserShow />, name: "UserShow", permissions: ["read:dashboard"] },
     { path: "/admin/roles", element: <RoleList />, name: "RoleList", permissions: ["read:dashboard"] },
     { path: "/admin/fees", element: <AdminFeeManagement />, name: "AdminFeeManagement", permissions: ["read:dashboard"] },
   ]),

@@ -1,5 +1,4 @@
-// src/pages/UserEdit.jsx
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Building2,
@@ -10,14 +9,26 @@ import {
 
 import Breadcrumbs from "@/components/dashboard/Breadcumbs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 import { getUserById, updateUser } from "@/api/users";
-import { getAllRoles } from "@/api/roles"; // optional if roles come from API
+import { getAllRoles } from "@/api/roles";
 
 export default function UserEdit() {
   const { id } = useParams();
@@ -27,31 +38,30 @@ export default function UserEdit() {
   const [processing, setProcessing] = useState(false);
   const [errors, setErrors] = useState({});
   const [roles, setRoles] = useState([]);
-  const [userType, setUserType] = useState("personal");
   const [selectedFile, setSelectedFile] = useState(null);
 
   const [data, setData] = useState({
-    name: "",
+    fullName: "",
     email: "",
-    phone: "",
-    user_type: "personal",
+    phoneNumber: "",
+    userType: "personal",
     password: "",
     password_confirmation: "",
     status: "active",
     role: "",
-    company_name: "",
-    company_legal_form: "",
-    manager_name: "",
-    company_phone: "",
-    company_address: "",
-    business_description: "",
-    legal_form_document: null,
+    companyName: "",
+    legalForm: "",
+    managerName: "",
+    companyPhone: "",
+    companyAddress: "",
+    businessDescription: "",
+    legalFormDocument: null,
   });
 
-  const isBusinessUser = userType === "business_merchant";
+  const isBusinessUser = data.userType === "business_merchant";
 
   const breadcrumbs = [
-    { label: "Users", href: "/users" },
+    { label: "Users", href: "/admin/users" },
     { label: "Edit" },
   ];
 
@@ -61,17 +71,28 @@ export default function UserEdit() {
       try {
         const [userRes, rolesRes] = await Promise.all([
           getUserById(id),
-          getAllRoles?.() ?? [], // optional if available
+          getAllRoles?.() ?? [],
         ]);
 
         const user = userRes.data || userRes;
 
         setData((prev) => ({
           ...prev,
-          ...user,
-          role: user.role?.name || "",
+          fullName: user.fullName || "",
+          email: user.email || "",
+          phoneNumber: user.phoneNumber || "",
+          userType: user.userType || "personal",
+          status: user.status || "active",
+          role: user.role?.name || user.role || "",
+          companyName: user.companyName || "",
+          legalForm: user.legalForm || "",
+          managerName: user.managerName || "",
+          companyPhone: user.companyPhone || "",
+          companyAddress: user.companyAddress || "",
+          businessDescription: user.businessDescription || "",
+          legalFormDocument: user.legalFormDocument || null,
         }));
-        setUserType(user.user_type || "personal");
+
         if (rolesRes?.data) setRoles(rolesRes.data);
         else if (Array.isArray(rolesRes)) setRoles(rolesRes);
       } catch (err) {
@@ -87,27 +108,35 @@ export default function UserEdit() {
   const handleFileChange = (e) => {
     const file = e.target.files?.[0] || null;
     setSelectedFile(file);
-    setData((prev) => ({ ...prev, legal_form_document: file }));
+    setData((prev) => ({ ...prev, legalFormDocument: file }));
   };
 
   const handleChange = (key, value) => {
     setData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
     setProcessing(true);
     setErrors({});
 
+    // Check password confirmation
+    if (data.password !== data.password_confirmation) {
+      setErrors({ password_confirmation: "Passwords do not match" });
+      setProcessing(false);
+      return;
+    }
+
     try {
       const formData = new FormData();
       Object.keys(data).forEach((key) => {
-        if (data[key] !== null && data[key] !== undefined)
+        if (data[key] !== null && data[key] !== undefined) {
           formData.append(key, data[key]);
+        }
       });
 
-      await updateUser(id, formData);
-      navigate(`/users/${id}`);
+      await updateUser(id, data);
+      navigate(`/admin/users/${id}`);
     } catch (err) {
       console.error("Update failed:", err);
       if (err.response?.data?.errors) setErrors(err.response.data.errors);
@@ -120,13 +149,15 @@ export default function UserEdit() {
 
   return (
     <div className="space-y-6 mt-10">
-      {breadcrumbs && <Breadcrumbs breadcrumbs={breadcrumbs} />}
+      <Breadcrumbs breadcrumbs={breadcrumbs} />
 
       <div className="max-w-4xl mx-auto">
         <Card>
           <CardHeader>
             <CardTitle>Edit User</CardTitle>
-            <CardDescription>Update user information and settings</CardDescription>
+            <CardDescription>
+              Update user information and settings
+            </CardDescription>
           </CardHeader>
 
           <CardContent>
@@ -138,11 +169,10 @@ export default function UserEdit() {
                   <div className="space-y-2">
                     <Label>Full Name</Label>
                     <Input
-                      value={data.name}
-                      onChange={(e) => handleChange("name", e.target.value)}
-                      className={errors.name ? "border-red-500" : ""}
+                      value={data.fullName}
+                      onChange={(e) => handleChange("fullName", e.target.value)}
+                      className={errors.fullName ? "border-red-500" : ""}
                     />
-                    {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -153,27 +183,24 @@ export default function UserEdit() {
                       onChange={(e) => handleChange("email", e.target.value)}
                       className={errors.email ? "border-red-500" : ""}
                     />
-                    {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
                   </div>
 
                   <div className="space-y-2">
                     <Label>Phone</Label>
                     <Input
-                      value={data.phone}
-                      onChange={(e) => handleChange("phone", e.target.value)}
-                      className={errors.phone ? "border-red-500" : ""}
+                      value={data.phoneNumber}
+                      onChange={(e) =>
+                        handleChange("phoneNumber", e.target.value)
+                      }
+                      className={errors.phoneNumber ? "border-red-500" : ""}
                     />
-                    {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
                   </div>
 
                   <div className="space-y-2">
                     <Label>User Type</Label>
                     <Select
-                      value={data.user_type}
-                      onValueChange={(v) => {
-                        handleChange("user_type", v);
-                        setUserType(v);
-                      }}
+                      value={data.userType}
+                      onValueChange={(v) => handleChange("userType", v)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select user type" />
@@ -191,7 +218,6 @@ export default function UserEdit() {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    {errors.user_type && <p className="text-sm text-red-500">{errors.user_type}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -222,7 +248,7 @@ export default function UserEdit() {
                       <SelectContent>
                         {roles.map((r) => (
                           <SelectItem key={r.id} value={r.name}>
-                            {r.name}
+                            {r.name.charAt(0).toUpperCase() + r.name.slice(1)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -251,7 +277,11 @@ export default function UserEdit() {
                       onChange={(e) =>
                         handleChange("password_confirmation", e.target.value)
                       }
+                      className={errors.password_confirmation ? "border-red-500" : ""}
                     />
+                    {errors.password_confirmation && (
+                      <p className="text-sm text-red-500">{errors.password_confirmation}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -267,40 +297,48 @@ export default function UserEdit() {
                     <div className="space-y-2">
                       <Label>Company Name</Label>
                       <Input
-                        value={data.company_name}
-                        onChange={(e) => handleChange("company_name", e.target.value)}
+                        value={data.companyName}
+                        onChange={(e) =>
+                          handleChange("companyName", e.target.value)
+                        }
                       />
                     </div>
 
                     <div className="space-y-2">
                       <Label>Legal Form</Label>
                       <Input
-                        value={data.company_legal_form}
-                        onChange={(e) => handleChange("company_legal_form", e.target.value)}
+                        value={data.legalForm}
+                        onChange={(e) => handleChange("legalForm", e.target.value)}
                       />
                     </div>
 
                     <div className="space-y-2">
                       <Label>Manager Name</Label>
                       <Input
-                        value={data.manager_name}
-                        onChange={(e) => handleChange("manager_name", e.target.value)}
+                        value={data.managerName}
+                        onChange={(e) =>
+                          handleChange("managerName", e.target.value)
+                        }
                       />
                     </div>
 
                     <div className="space-y-2">
                       <Label>Company Phone</Label>
                       <Input
-                        value={data.company_phone}
-                        onChange={(e) => handleChange("company_phone", e.target.value)}
+                        value={data.companyPhone}
+                        onChange={(e) =>
+                          handleChange("companyPhone", e.target.value)
+                        }
                       />
                     </div>
 
                     <div className="space-y-2 md:col-span-2">
                       <Label>Company Address</Label>
                       <Textarea
-                        value={data.company_address}
-                        onChange={(e) => handleChange("company_address", e.target.value)}
+                        value={data.companyAddress}
+                        onChange={(e) =>
+                          handleChange("companyAddress", e.target.value)
+                        }
                         rows={3}
                       />
                     </div>
@@ -308,8 +346,10 @@ export default function UserEdit() {
                     <div className="space-y-2 md:col-span-2">
                       <Label>Business Description</Label>
                       <Textarea
-                        value={data.business_description}
-                        onChange={(e) => handleChange("business_description", e.target.value)}
+                        value={data.businessDescription}
+                        onChange={(e) =>
+                          handleChange("businessDescription", e.target.value)
+                        }
                         rows={3}
                       />
                     </div>

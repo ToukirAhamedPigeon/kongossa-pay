@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import {
   Building2,
   FileText,
@@ -15,12 +15,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
-import { getUserById } from "@/api/users";
+import { getUserById, downloadUserDocument } from "@/api/users";
 
 export default function UserShow() {
   const { id } = useParams();
-  const navigate = useNavigate();
-
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +28,7 @@ export default function UserShow() {
       const data = await getUserById(id);
       setUser(data);
     } catch (err) {
-      console.error("Failed to fetch user:", err);
+      console.error("❌ Failed to fetch user:", err);
       setUser(null);
     } finally {
       setLoading(false);
@@ -48,18 +46,17 @@ export default function UserShow() {
 
   if (!user)
     return (
-      <p className="text-center py-10 text-muted-foreground">
-        User not found.
-      </p>
+      <p className="text-center py-10 text-muted-foreground">User not found.</p>
     );
 
-  const createdTontines = user.created_tontines || [];
-  const memberTontines = user.tontine_memberships || [];
+  // Fallbacks for optional fields
+  const createdTontines = user.tontinesCreated || [];
+  const memberTontines = user.tontineMembers || [];
 
   const breadcrumbs = [
-    { label: "Dashboard", href: "/dashboard" },
-    { label: "Users", href: "/users" },
-    { label: user.name },
+    { label: "Dashboard", href: "/admin/dashboard" },
+    { label: "Users", href: "/admin/users" },
+    { label: user.fullName },
   ];
 
   return (
@@ -71,10 +68,10 @@ export default function UserShow() {
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarImage src={user.avatar} alt={user.name} />
+              <AvatarImage src={user.profileImage} alt={user.fullName} />
               <AvatarFallback className="text-lg">
-                {user.name
-                  .split(" ")
+                {user.fullName
+                  ?.split(" ")
                   .map((n) => n[0])
                   .join("")
                   .toUpperCase()}
@@ -83,17 +80,17 @@ export default function UserShow() {
 
             <div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                {user.name}
+                {user.fullName}
               </h3>
               <div className="flex items-center gap-2 mt-1">
                 <Badge
                   variant={
-                    user.user_type === "business_merchant"
+                    user.userType === "business_merchant"
                       ? "default"
                       : "secondary"
                   }
                 >
-                  {user.user_type === "business_merchant" ? (
+                  {user.userType === "business_merchant" ? (
                     <>
                       <Building2 className="w-3 h-3 mr-1" />
                       Business
@@ -108,7 +105,7 @@ export default function UserShow() {
                 <Badge
                   variant={user.status === "active" ? "default" : "destructive"}
                 >
-                  {user.status}
+                  {user.status === "active" ? "Active" : "Suspended"}
                 </Badge>
               </div>
             </div>
@@ -124,7 +121,7 @@ export default function UserShow() {
                 Full name
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                {user.name}
+                {user.fullName}
               </dd>
             </div>
 
@@ -138,14 +135,14 @@ export default function UserShow() {
               </dd>
             </div>
 
-            {user.phone && (
+            {user.phoneNumber && (
               <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
                   <Phone className="w-4 h-4" />
                   Phone number
                 </dt>
                 <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                  {String(user.phone)}
+                  {String(user.phoneNumber)}
                 </dd>
               </div>
             )}
@@ -155,7 +152,7 @@ export default function UserShow() {
                 Role
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                {user.role?.name}
+                {user.role}
               </dd>
             </div>
 
@@ -164,7 +161,7 @@ export default function UserShow() {
                 Member since
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                {new Date(user.created_at).toLocaleDateString()}
+                {new Date(user.createdAt).toLocaleDateString()}
               </dd>
             </div>
 
@@ -174,15 +171,15 @@ export default function UserShow() {
                 Email Verified
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                {user.email_verified_at
-                  ? new Date(user.email_verified_at).toLocaleDateString()
+                {user.emailVerifiedAt
+                  ? new Date(user.emailVerifiedAt).toLocaleDateString()
                   : "Not Verified"}
               </dd>
             </div>
           </dl>
 
           {/* Business Info */}
-          {user.user_type === "business_merchant" && (
+          {user.userType === "business_merchant" && (
             <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
               <h4 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
@@ -190,92 +187,87 @@ export default function UserShow() {
               </h4>
 
               <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                {user.company_name && (
+                {user.companyName && (
                   <div className="sm:col-span-2">
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       Company Name
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                      {user.company_name}
+                      {user.companyName}
                     </dd>
                   </div>
                 )}
 
-                {user.manager_name && (
+                {user.managerName && (
                   <div>
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       Manager Name
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                      {user.manager_name}
+                      {user.managerName}
                     </dd>
                   </div>
                 )}
 
-                {user.company_phone && (
+                {user.companyPhone && (
                   <div>
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
                       <Phone className="w-4 h-4" />
                       Company Phone
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                      {user.company_phone}
+                      {user.companyPhone}
                     </dd>
                   </div>
                 )}
 
-                {user.company_legal_form && (
+                {user.legalForm && (
                   <div>
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       Legal Form
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                      {user.company_legal_form}
+                      {user.legalForm}
                     </dd>
                   </div>
                 )}
 
-                {user.company_address && (
+                {user.companyAddress && (
                   <div className="sm:col-span-2">
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
                       <MapPin className="w-4 h-4" />
                       Company Address
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                      {user.company_address}
+                      {user.companyAddress}
                     </dd>
                   </div>
                 )}
 
-                {user.business_description && (
+                {user.businessDescription && (
                   <div className="sm:col-span-2">
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       Business Description
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                      {user.business_description}
+                      {user.businessDescription}
                     </dd>
                   </div>
                 )}
 
-                {user.legal_form_document && (
+                {user.legalFormDocument && (
                   <div>
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
                       <FileText className="w-4 h-4" />
                       Legal Form Document
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                      <a
-                        href={
-                          user.legal_form_document_url ||
-                          String(user.legal_form_document)
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => downloadUserDocument(user)}
                         className="text-primary hover:text-primary/80 underline"
                       >
-                        View Document
-                      </a>
+                        Download Document
+                      </button>
                     </dd>
                   </div>
                 )}
@@ -312,7 +304,7 @@ export default function UserShow() {
                           <Badge>Active</Badge>
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                          {formatCurrency(t.contribution_amount)} / {t.frequency}
+                          {formatCurrency(t.contributionAmount)} / {t.frequency}
                         </div>
                       </Link>
                     </li>
@@ -343,7 +335,7 @@ export default function UserShow() {
                     >
                       <Link to={`/tontines/${m.id}`}>
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold">{m.id}</span>
+                          <span className="font-semibold">{m.tontineName}</span>
                           <Badge>Member</Badge>
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">

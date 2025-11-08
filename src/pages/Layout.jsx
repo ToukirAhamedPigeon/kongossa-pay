@@ -57,20 +57,11 @@ export default function Layout() {
 
   // 🌐 Public pages
   const marketingPages = [
-    "Home",
-    "Personal",
-    "Business",
-    "Agent",
-    "About",
-    "Support",
-    "Privacy",
-    "Terms",
-    "Login",
-    "Register",
-    "PublicInvitation",
-  ];
-  const currentPageName = location.pathname.replace(/\//g, "") || "Home";
-  const isMarketingPage = marketingPages.includes(currentPageName);
+  "home", "personal", "business", "agent", "about", "support", "privacy", "terms", "login", "register", "verify-otp",  "publicinvitation",
+];
+
+const currentPageName = location.pathname.replace(/\//g, "").toLowerCase() || "home";
+const isMarketingPage = marketingPages.includes(currentPageName);
 
   // 🚪 Logout
   const handleLogout = async () => {
@@ -145,7 +136,7 @@ export default function Layout() {
         accessToken={accessToken}
       />
     );
-  console.log("User:", JSON.stringify(user, null, 2));
+  // console.log("User:", JSON.stringify(user, null, 2));
   if (!user) return null;
 
   /* ---------------------------------------------------------------------- */

@@ -32,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfirmationDialog } from "@/components/dashboard/ConfirmationDialog";
+import Breadcrumbs from "@/components/dashboard/Breadcumbs";
 // import { useToast } from "@/components";
 import { useDebounce } from "@/lib/utils";
 import {
@@ -45,7 +46,8 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
-import { getUsers, updateUser, deleteUser } from "../api/users"; // your API functions
+import { getUsers, updateUser, deleteUser } from "../api/users";
+import { assignRoleToUser, removeRoleFromUser } from "../api/roles";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function UserList() {
@@ -57,30 +59,38 @@ export default function UserList() {
     inactive_users: 0,
     total_roles: 0,
   });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    perPage: 10,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false,
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-//   const { toast } = useToast();
+  // const { toast } = useToast();
   const inputRef = useRef(null);
   const navigate = useNavigate();
 
   // 🔹 Fetch Users
-  const fetchUsers = async (query = "") => {
+  const fetchUsers = async (query = "", page = 1) => {
     try {
-      const res = await getUsers(query);
+      const res = await getUsers({
+        page,
+        per_page: pagination.perPage,
+        search: query,
+      });
       if (res) {
-        setUsers(res.data || []);
+        setUsers(res.users || []);
         setRoles(res.roles || []);
         setStats(res.stats || {});
+        setPagination(res.pagination || {});
       }
     } catch (err) {
-    //   toast({
-    //     title: "Error fetching users",
-    //     description: err.message || "Failed to load users.",
-    //     variant: "destructive",
-    //   });
+      console.error("Error fetching users:", err);
     }
   };
 
@@ -90,7 +100,7 @@ export default function UserList() {
 
   // 🔹 Debounce Search
   useDebounce(searchTerm, () => {
-    fetchUsers(searchTerm);
+    fetchUsers(searchTerm, 1);
   }, 500);
 
   const formatDate = (dateString) => {
@@ -106,36 +116,36 @@ export default function UserList() {
     try {
       const newStatus = user.status === "Active" ? "inactive" : "active";
       await updateUser(user.id, { status: newStatus });
-    //   toast({
-    //     title: "Status Updated",
-    //     description: `User status changed to ${newStatus}.`,
-    //   });
-      fetchUsers(searchTerm);
+      fetchUsers(searchTerm, pagination.page);
     } catch (err) {
-    //   toast({
-    //     title: "Failed to update status",
-    //     description: err.message || "Something went wrong.",
-    //     variant: "destructive",
-    //   });
+      console.error("Failed to update status:", err);
     }
   };
 
-  const handleRoleChange = async (userId, roleName) => {
+  const handleRoleChange = async (userId, newRoleName) => {
     try {
-      await updateUser(userId, { role: roleName });
-    //   toast({
-    //     title: "Role Updated",
-    //     description: "User role changed successfully.",
-    //   });
-      fetchUsers(searchTerm);
+      // Get current roles of the user
+      const userRole = users.find(u => u.id === userId)?.role || 'user';
+      const currentRoleId = roles.find(r => r.name.toLowerCase() === userRole.toLowerCase())?.id;
+      const newRoleId = roles.find(r => r.name.toLowerCase() === newRoleName.toLowerCase())?.id;
+
+      // Remove old role if exists
+      if (currentRoleId) {
+        await removeRoleFromUser(userId, currentRoleId);
+      }
+
+      // Assign new role
+      if (newRoleId) {
+        await assignRoleToUser(userId, newRoleId);
+      }
+
+      // Refetch users or update state locally
+      fetchUsers(searchTerm, pagination.page);
     } catch (err) {
-    //   toast({
-    //     title: "Failed to update role",
-    //     description: err.message || "Something went wrong.",
-    //     variant: "destructive",
-    //   });
+      console.error("Failed to update role:", err);
     }
   };
+
 
   const handleDelete = (user) => {
     setUserToDelete(user);
@@ -147,21 +157,13 @@ export default function UserList() {
     setIsDeleting(true);
     try {
       await deleteUser(userToDelete.id);
-      toast({
-        title: "User Deleted",
-        description: "User removed successfully.",
-      });
-    //   toast({
-    //     title: "User Deleted",
-    //     description: "User removed successfully.",
-    //   });
-      fetchUsers(searchTerm);
+      // toast({
+      //   title: "User Deleted",
+      //   description: "User removed successfully.",
+      // });
+      fetchUsers(searchTerm, pagination.page);
     } catch (err) {
-    //   toast({
-    //     title: "Delete Failed",
-    //     description: err.message || "An error occurred.",
-    //     variant: "destructive",
-    //   });
+      console.error("Delete failed:", err);
     } finally {
       setIsDeleting(false);
       setIsConfirmOpen(false);
@@ -169,9 +171,16 @@ export default function UserList() {
     }
   };
 
+  const breadcrumbs = [
+    { label: "Dashboard", href: "/admin/dashboard" },
+    { label: "Users" },
+  ];
+
   return (
     <div className="py-6">
       <div className="max-w-full mx-auto">
+        {/* 🔹 Breadcrumbs */}
+        <Breadcrumbs breadcrumbs={breadcrumbs} />
         {/* 🔹 Stats */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
           <Card>
@@ -228,7 +237,7 @@ export default function UserList() {
               />
             </div>
             <Button asChild>
-              <Link to="/users/create">
+              <Link to="/admin/users/create">
                 <Plus className="w-4 h-4 mr-2" /> Create User
               </Link>
             </Button>
@@ -327,23 +336,22 @@ export default function UserList() {
                       <TableCell>
                         <Select
                           disabled={user.id === 1}
-                          defaultValue={user.role?.name?.toLowerCase()}
-                          onValueChange={(value) =>
-                            handleRoleChange(user.id, value)
-                          }
+                          value={user.role?.toLowerCase() ?? ""} // controlled value
+                          onValueChange={(value) => handleRoleChange(user.id, value)}
                         >
                           <SelectTrigger className="w-[130px]">
                             <SelectValue placeholder="Select role" />
                           </SelectTrigger>
                           <SelectContent>
-                            {roles.map((role) => (
-                              <SelectItem
-                                key={role.id}
-                                value={role.name.toLowerCase()}
-                              >
-                                {role.name}
-                              </SelectItem>
-                            ))}
+                            {roles.map((role) => {
+                              // make sure the value is also lowercased to match `value`
+                              const roleValue = role.name?.toLowerCase() ?? "";
+                              return (
+                                <SelectItem key={role.id} value={roleValue}>
+                                  {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
+                                </SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                       </TableCell>
@@ -358,7 +366,7 @@ export default function UserList() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => navigate(`/users/${user.id}`)}
+                                  onClick={() => navigate(`/admin/users/${user.id}`)}
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
@@ -373,7 +381,7 @@ export default function UserList() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => navigate(`/users/${user.id}/edit`)}
+                                  onClick={() => navigate(`/admin/users/${user.id}/edit`)}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -415,17 +423,24 @@ export default function UserList() {
           </CardContent>
         </Card>
 
-        {/* 🔹 Pagination Placeholder */}
-        <Pagination className="mt-6">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious href="#" />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+        {/* 🔹 Pagination */}
+        <div className="flex justify-center mt-6 space-x-2">
+          <Button
+            disabled={!pagination.hasPrev}
+            onClick={() => fetchUsers(searchTerm, pagination.page - 1)}
+          >
+            Previous
+          </Button>
+          <span className="flex items-center px-4">
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
+          <Button
+            disabled={!pagination.hasNext}
+            onClick={() => fetchUsers(searchTerm, pagination.page + 1)}
+          >
+            Next
+          </Button>
+        </div>
       </div>
 
       {userToDelete && (
