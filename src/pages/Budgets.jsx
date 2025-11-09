@@ -183,7 +183,7 @@ export default function BudgetsList() {
       </Card>
 
       {/* Budgets List */}
-      {!budgets?.data?.length ? (
+      {!budgets?.length ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
@@ -201,7 +201,7 @@ export default function BudgetsList() {
         </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {budgets.data.map((budget) => (
+          {budgets.map((budget) => (
             <Card key={budget.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
@@ -239,7 +239,7 @@ export default function BudgetsList() {
                   <div className="flex justify-between items-end">
                     <div>
                       <p className="text-sm text-muted-foreground">Total Budget</p>
-                      <p className="text-2xl font-bold">${budget.total_amount.toLocaleString()}</p>
+                      <p className="text-2xl font-bold">${budget.totalAmount.toLocaleString()}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-muted-foreground">Spent</p>
@@ -272,7 +272,7 @@ export default function BudgetsList() {
                       <div className="flex items-center gap-1 text-xs text-red-600">
                         <TrendingUp className="h-3 w-3" />
                         Over budget by ${(
-                          budget.total_spent - budget.total_amount
+                          budget.total_spent - budget.totalAmount
                         ).toLocaleString()}
                       </div>
                     )}
@@ -286,7 +286,7 @@ export default function BudgetsList() {
                       }`}
                     >
                       ${(
-                        budget.total_amount - budget.total_spent
+                        budget.totalAmount - budget.total_spent
                       ).toLocaleString()}
                     </span>
                   </div>
