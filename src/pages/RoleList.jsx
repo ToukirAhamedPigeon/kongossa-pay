@@ -23,7 +23,7 @@ import {
   getAllPermissions,
 } from "@/api/roles";
 
-export default function RolesList() {
+export default function RoleList() {
   const [roles, setRoles] = useState([]);
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -83,7 +83,7 @@ export default function RolesList() {
     setEditingRole(role);
     setEditFormData({
       name: role.name,
-      permissions: role.permissions.map(p => p.name),
+      permissions: role.permissions.map(p => p.id),
     });
     setIsEditModalOpen(true);
   };
@@ -154,7 +154,7 @@ export default function RolesList() {
               <TableBody>
                 {roles.map((role) => (
                   <TableRow key={role.id}>
-                    <TableCell>{role.name}</TableCell>
+                    <TableCell>{role.name.charAt(0).toUpperCase() + role.name.slice(1)}</TableCell>
                     <TableCell>{role.total_users}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
@@ -212,18 +212,18 @@ export default function RolesList() {
               <Label>Permissions</Label>
               <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
                 {permissions.map((perm) => (
-                  <div key={perm} className="flex items-center gap-2">
+                  <div key={perm.id} className="flex items-center gap-2">
                     <Checkbox
-                      id={perm}
-                      checked={formData.permissions.includes(perm)}
+                      id={perm.id}
+                      checked={formData.permissions.includes(perm.id)}
                       onCheckedChange={(checked) => {
                         const updated = checked
-                          ? [...formData.permissions, perm]
-                          : formData.permissions.filter((p) => p !== perm);
+                          ? [...formData.permissions, perm.id]
+                          : formData.permissions.filter((p) => p !== perm.id);
                         setFormData({ ...formData, permissions: updated });
                       }}
                     />
-                    <Label htmlFor={perm}>{perm}</Label>
+                    <Label htmlFor={perm.id}>{perm.name}</Label>
                   </div>
                 ))}
               </div>
@@ -259,18 +259,18 @@ export default function RolesList() {
               <Label>Permissions</Label>
               <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
                 {permissions.map((perm) => (
-                  <div key={perm} className="flex items-center gap-2">
+                  <div key={perm.id} className="flex items-center gap-2">
                     <Checkbox
-                      id={`edit-${perm}`}
-                      checked={editFormData.permissions.includes(perm)}
+                      id={`edit-${perm.id}`}
+                      checked={editFormData.permissions.includes(perm.id)}
                       onCheckedChange={(checked) => {
                         const updated = checked
-                          ? [...editFormData.permissions, perm]
-                          : editFormData.permissions.filter((p) => p !== perm);
+                          ? [...editFormData.permissions, perm.id]
+                          : editFormData.permissions.filter((p) => p !== perm.id);
                         setEditFormData({ ...editFormData, permissions: updated });
                       }}
                     />
-                    <Label htmlFor={`edit-${perm}`}>{perm}</Label>
+                    <Label htmlFor={`edit-${perm.id}`}>{perm.name}</Label>
                   </div>
                 ))}
               </div>
