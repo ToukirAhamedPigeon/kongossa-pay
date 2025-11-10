@@ -10,7 +10,7 @@ import {
   declineTontineInvite,
 } from "../api/tontineInvites";
 
-export default function InvitationsList() {
+export default function TontineInvite() {
   const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(true);
 

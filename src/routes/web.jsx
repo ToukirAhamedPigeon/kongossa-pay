@@ -34,6 +34,12 @@ import Password from "@/pages/Password";
 import Appearance from "@/pages/Appearance";
 import AdminFeeManagement from "@/pages/AdminFeeManagement";
 
+import TontinesList from "@/pages/TontinesList";
+import TontineInvite from "@/pages/TontineInvite";
+import TontineCreate from "@/pages/TontineCreate";
+import TontineDetail from "@/pages/TontineDetail";
+import TontineEdit from "@/pages/TontineEdit";
+
 // 🧭 Static Laravel-style routes
 export const routes = [
   // 🔓 Public Routes
@@ -68,6 +74,13 @@ export const routes = [
     // Expenses
     { path: "/expenses", element: <ExpensesList />, name: "ExpensesList", permissions: ["read:dashboard"] },
     { path: "/expenses/create", element: <ExpenseCreate />, name: "ExpenseCreate", permissions: ["read:dashboard"] },
+
+    { path: "/tontines", element: <TontinesList />, name: "TontinesList", permissions: ["read:dashboard"] },
+    { path: "/tontines/create", element: <TontineCreate />, name: "TontineCreate", permissions: ["read:dashboard"] },
+    { path: "/tontines/invite", element: <TontineInvite />, name: "TontineInvite", permissions: ["read:dashboard"] },
+    { path: "/tontines/:id", element: <TontineDetail />, name: "TontineDetail", permissions: ["read:dashboard"] },
+    { path: "/tontines/:id/edit", element: <TontineEdit />, name: "TontineEdit", permissions: ["read:dashboard"] },
+
 
     // Admin
     { path: "/admin/users", element: <UserList />, name: "UserList", permissions: ["read:dashboard"] },

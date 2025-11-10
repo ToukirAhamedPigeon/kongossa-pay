@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom"; // For normal React routing
 import  Breadcrumbs  from "@/components/dashboard/Breadcumbs";
-import { TontineContributionForm, TontineInviteForm } from "@/components/forms";
+import TontineContributionForm from "@/components/dashboard/TontineContributionForm";
+import TontineInviteForm from "@/components/dashboard/TontineInviteForm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +32,7 @@ import {
   TrendingUp,
   UserPlus
 } from "lucide-react";
-import { getTontineById } from "@/api/tontineApi"; // Your API call
+import { getTontineById } from "@/api/tontines"; // Your API call
 
 export default function TontineDetailPage() {
   const { id } = useParams(); // Get tontine ID from route
