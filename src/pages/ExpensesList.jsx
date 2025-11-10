@@ -39,17 +39,15 @@ import {
 } from "@/components/ui/table";
 import { useNavigate } from "react-router-dom";
 import { getExpenses } from "../api/expense";
-import { getBudgets, getBudgetCategories } from "../api/budget";
+import { getBudgets } from "../api/budget";
 
 export default function ExpensesList() {
   const navigate = useNavigate();
-
   const [expenses, setExpenses] = useState([]);
+  const [allExpenses, setAllExpenses] = useState([]);
   const [budgetCategories, setBudgetCategories] = useState([]);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -61,34 +59,23 @@ export default function ExpensesList() {
     { label: "Expenses" },
   ];
 
-  // -----------------------
-  // 🔹 Fetch Data from API
-  // -----------------------
   const fetchData = async () => {
     setLoading(true);
     setError("");
     try {
-      const [expensesRes, budgetsRes] = await Promise.all([
-        getExpenses(),
-        getBudgets(),
-      ]);
-      const expenseData = await getExpenses();
-      const budgetData = await getBudgets();
+      const expenseData = await getExpenses({ params: { search: searchTerm } });
+      const budgetDataResponse = await getBudgets();
+      const expensesList = expenseData?.expenses || [];
+      const budgets = budgetDataResponse?.data || [];
 
-
-      // Flatten all categories across budgets
-      const allCategories = await Promise.all(
-        budgetData.map(async (budget) => {
-          const categories = await getBudgetCategories(budget.id);
-          return categories.data.map((c) => ({
-            ...c,
-            budget: { id: budget.id, name: budget.name },
-          }));
-        })
+      // Flatten categories
+      const allCategories = budgets.flatMap((budget) =>
+        budget.categories.map((c) => ({ ...c, budget: { id: budget.id, name: budget.name } }))
       );
 
-      setBudgetCategories(allCategories.flat());
-      setExpenses(expenseData || []);
+      setBudgetCategories(allCategories);
+      setExpenses(expensesList);
+      console.log(allCategories, expensesList);
     } catch (err) {
       console.error(err);
       setError("Failed to load expenses. Please try again.");
@@ -101,45 +88,37 @@ export default function ExpensesList() {
     fetchData();
   }, []);
 
-  // -----------------------
-  // 🔹 Handle Search
-  // -----------------------
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
-    // You can later call backend filters, currently client-side filtering
-    const filtered = expenses.filter((exp) => {
-      const matchTerm =
-        !searchTerm ||
-        exp.title?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchCategory =
-        !selectedCategory ||
-        selectedCategory === "all" ||
-        exp.budget_category?.id?.toString() === selectedCategory;
-      const matchDateFrom = !dateFrom || new Date(exp.expense_date) >= new Date(dateFrom);
-      const matchDateTo = !dateTo || new Date(exp.expense_date) <= new Date(dateTo);
-      return matchTerm && matchCategory && matchDateFrom && matchDateTo;
-    });
-    setExpenses(filtered);
+    setLoading(true);
+    setError("");
+
+    try {
+      const params = new URLSearchParams();
+
+      if (searchTerm) params.append("search", searchTerm);
+      if (selectedCategory && selectedCategory !== "all") params.append("category", selectedCategory);
+      if (dateFrom) params.append("dateFrom", dateFrom);
+      if (dateTo) params.append("dateTo", dateTo);
+
+      const data = await getExpenses({ params });
+
+      setExpenses(data.expenses || []);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load filtered expenses.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // -----------------------
-  // 🔹 Stats Helpers
-  // -----------------------
+
   const totalAmount = expenses.reduce((t, e) => t + +e.amount, 0);
   const avgExpense = expenses.length ? (totalAmount / expenses.length).toFixed(2) : 0;
-  const topCategory =
-    budgetCategories.length > 0 ? budgetCategories[0].name : "—";
+  const topCategory = budgetCategories.length > 0 ? budgetCategories[0].name : "—";
 
-  // -----------------------
-  // 🔹 UI Rendering
-  // -----------------------
   if (loading)
-    return (
-      <div className="flex justify-center py-16 text-muted-foreground">
-        Loading expenses...
-      </div>
-    );
-
+    return <div className="flex justify-center py-16 text-muted-foreground">Loading expenses...</div>;
   if (error)
     return (
       <div className="text-center py-16 text-red-600">
@@ -150,8 +129,6 @@ export default function ExpensesList() {
   return (
     <div className="space-y-6 mt-10">
       <Breadcrumbs breadcrumbs={breadcrumbs} />
-
-      {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">My Expenses</h1>
@@ -219,16 +196,14 @@ export default function ExpensesList() {
         <CardContent className="pt-6">
           <form onSubmit={handleSearch} className="space-y-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-end">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search expenses..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search expenses..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
 
               <div className="flex gap-2">
@@ -247,18 +222,8 @@ export default function ExpensesList() {
                   </SelectContent>
                 </Select>
 
-                <Input
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className="w-32"
-                />
-                <Input
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className="w-32"
-                />
+                <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-32" />
+                <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-32" />
 
                 <Button type="submit">
                   <Search className="h-4 w-4" />
@@ -306,37 +271,24 @@ export default function ExpensesList() {
                 {expenses.map((expense) => (
                   <TableRow key={expense.id}>
                     <TableCell>
-                      <div>
-                        <p className="font-medium">{expense.title}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Added {new Date(expense.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
+                      <p className="font-medium">{expense.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Added {new Date(expense.createdAt).toLocaleDateString()}
+                      </p>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded"
-                          style={{
-                            backgroundColor: expense.budget_category?.color || "#ccc",
-                          }}
-                        />
-                        <span>{expense.budget_category?.name}</span>
+                        <div className="w-3 h-3 rounded" style={{ backgroundColor: expense.budgetCategory?.color || "#ccc" }} />
+                        <span>{expense.budgetCategory?.name}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">
-                        {expense.budget_category?.budget?.name}
-                      </Badge>
+                      <Badge variant="outline">{expense.budgetCategory?.budget?.name}</Badge>
                     </TableCell>
                     <TableCell>
-                      <span className="font-medium text-red-600">
-                        ${expense.amount}
-                      </span>
+                      <span className="font-medium text-red-600">${expense.amount}</span>
                     </TableCell>
-                    <TableCell>
-                      {new Date(expense.expense_date).toLocaleDateString()}
-                    </TableCell>
+                    <TableCell>{new Date(expense.expenseDate).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

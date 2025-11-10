@@ -8,8 +8,8 @@ const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:3000";
 // -----------------------------
 
 // GET all expenses
-export const getExpenses = async () => {
-  const res = api.get(`${API_BASE}/expenses`);
+export const getExpenses = async ({ params={} }) => {
+  const res = await api.get(`${API_BASE}/expenses`, { params });
   return res.data;
 };
 

@@ -4,10 +4,10 @@ import api from "../lib/axios";
 // Budget API Functions
 // ----------------------------
 
-export async function getBudgets({ params }) {
-  const res = await api.get("/budgets", { params });
+export const getBudgets = async (options = {}) => {
+  const res = await api.get("/budgets", options); 
   return res.data;
-}
+};
 
 export async function createBudget(data) {
   const res = await api.post("/budgets", data);
