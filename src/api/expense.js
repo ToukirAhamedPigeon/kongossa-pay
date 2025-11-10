@@ -27,13 +27,31 @@ export const getExpenseCreateForm = async () => {
 
 // POST create new expense
 export const createExpense = async (data) => {
-  const res = api.post(`${API_BASE}/expenses`, data);
+  // Transform snake_case → camelCase for backend DTO
+  const payload = {
+    title: data.title,
+    amount: data.amount,
+    budgetCategoryId: data.budget_category_id, // ✅ renamed
+    expenseDate: data.expense_date,             // ✅ renamed
+    description: data.description || null,
+  };
+
+  const res = await api.post(`${API_BASE}/expenses`, payload);
   return res.data;
 };
 
 // PUT update expense by ID
 export const updateExpense = async (id, data) => {
-  const res = api.put(`${API_BASE}/expenses/${id}`, data);
+
+  const payload = {
+  budgetCategoryId: Number(data.budget_category_id),
+  title: data.title,
+  amount: Number(data.amount),
+  expenseDate: data.expense_date,
+  description: data.description || null,
+};
+
+  const res = api.put(`${API_BASE}/expenses/${id}`, payload);
   return res.data;
 };
 

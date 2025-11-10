@@ -1,30 +1,58 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import { createBudgetCategory, updateBudgetCategory } from "@/api/budget";
+import { createBudgetCategory, updateBudgetCategory } from "@/api/budgetCategories";
 
 const BudgetCategoryForm = ({ budgetId, category, onClose, onSuccess }) => {
-  const [name, setName] = useState(category?.name || "");
-  const [description, setDescription] = useState(category?.description || "");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Populate form fields when editing
+  useEffect(() => {
+    if (category) {
+      setName(category.name || "");
+      setDescription(category.description || "");
+    } else {
+      setName("");
+      setDescription("");
+    }
+  }, [category]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Basic validation
+    if (!name.trim()) {
+      //toast({ title: "Validation Error", description: "Name is required.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     try {
-      if (category) {
-        await updateBudgetCategory(category.id, { name, description });
-        toast({ title: "Category updated successfully" });
+      if (category && category.id) {
+        // ✅ Update existing category
+        await updateBudgetCategory(category.id, { name: name.trim(), description: description.trim() });
+        //toast({ title: "Category updated successfully" });
       } else {
-        await createBudgetCategory(budgetId, { name, description });
+        // ✅ Create new category
+        if (!budgetId) throw new Error("Missing budget ID");
+        await createBudgetCategory(budgetId, { name: name.trim(), description: description.trim() });
         toast({ title: "Category added successfully" });
       }
-      onSuccess();
-      onClose();
+
+      // Notify parent to refresh categories only
+      if (onSuccess) onSuccess();
+      if (onClose) onClose();
     } catch (err) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      console.error(err);
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || err.message || "Something went wrong",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -34,11 +62,17 @@ const BudgetCategoryForm = ({ budgetId, category, onClose, onSuccess }) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="text-sm font-medium">Name</label>
-        <Input value={name} onChange={(e) => setName(e.target.value)} required />
+        <Input
+          placeholder="Enter category name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
       </div>
       <div>
         <label className="text-sm font-medium">Description</label>
         <Textarea
+          placeholder="Enter category description (optional)"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
@@ -48,7 +82,7 @@ const BudgetCategoryForm = ({ budgetId, category, onClose, onSuccess }) => {
           Cancel
         </Button>
         <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : "Save"}
+          {loading ? (category ? "Updating..." : "Saving...") : "Save"}
         </Button>
       </div>
     </form>

@@ -12,27 +12,33 @@ import InputError from "@/components/dashboard/InputError";
 
 import { createExpense, updateExpense } from "../../api/expense";
 
-export default function ExpenseFormPage({ categories, expense = null, budgetCategoryId = null, onSuccess, onCancel }) {
+export default function ExpenseForm({ categories = [], expense = null, budgetCategoryId = null, onSuccess, onCancel }) {
   const isEditing = !!expense;
   const today = format(new Date(), "yyyy-MM-dd");
+  const amountRef = useRef(null);
 
   const [formData, setFormData] = useState({
-    budget_category_id: budgetCategoryId || expense?.budget_category_id || 0,
+    budget_category_id: budgetCategoryId || expense?.budget_category_id || null,
     title: expense?.title || "",
-    amount: expense?.amount || 0,
-    expense_date: expense?.expense_date || today,
+    amount: expense?.amount || "",
+    expense_date: expense?.expense_date
+      ? format(new Date(expense.expense_date), "yyyy-MM-dd")
+      : today,
   });
 
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const amountRef = useRef(null);
 
   useEffect(() => {
-    if (amountRef.current && amountRef.current.value === "0") {
-      amountRef.current.value = "";
-      setFormData((prev) => ({ ...prev, amount: 0 }));
-    }
-  }, [formData.amount]);
+    setFormData({
+      budget_category_id: budgetCategoryId || expense?.budget_category_id || null,
+      title: expense?.title || "",
+      amount: expense?.amount || "",
+      expense_date: expense?.expense_date
+        ? format(new Date(expense.expense_date), "yyyy-MM-dd")
+        : today,
+    });
+  }, [expense, budgetCategoryId]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -44,17 +50,36 @@ export default function ExpenseFormPage({ categories, expense = null, budgetCate
     }
   };
 
+  const normalizeExpense = (exp) => {
+    const category = categories.find((c) => c.id === exp.budget_category_id);
+    return {
+      id: exp.id,
+      title: exp.title || "",
+      amount: exp.amount || 0,
+      expense_date: exp.expense_date || today,
+      budget_category_id: exp.budget_category_id,
+      budgetCategoryName: category?.name || "N/A",
+    };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setErrors({});
+
     try {
+      let response;
+
       if (isEditing) {
-        await updateExpense(expense.id, formData);
+        // Wait for updateExpense to complete first
+        response = await updateExpense(expense.id, formData);
       } else {
-        await createExpense(formData);
+        // Wait for createExpense to complete first
+        response = await createExpense(formData);
       }
-      onSuccess?.();
+
+      // Now call onSuccess AFTER the API has successfully completed
+      await onSuccess?.(); // fetchBudget in parent will run here
     } catch (err) {
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
@@ -66,7 +91,9 @@ export default function ExpenseFormPage({ categories, expense = null, budgetCate
     }
   };
 
-  const selectedCategory = categories.find((cat) => cat.id === formData.budget_category_id);
+
+
+  const selectedCategory = categories.find((c) => c.id === formData.budget_category_id) || null;
 
   const breadcrumbs = [
     { label: "Dashboard", href: "/dashboard" },
@@ -98,21 +125,21 @@ export default function ExpenseFormPage({ categories, expense = null, budgetCate
               <div className="space-y-2">
                 <Label htmlFor="budget_category_id">Budget Category</Label>
                 <Select
-                  value={formData.budget_category_id.toString()}
-                  onValueChange={(value) => handleChange("budget_category_id", parseInt(value))}
+                  value={formData.budget_category_id ? String(formData.budget_category_id) : ""}
+                  onValueChange={(value) => handleChange("budget_category_id", Number(value))}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a budget category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id.toString()}>
                         <div className="flex items-center gap-2">
                           <div
                             className="w-3 h-3 rounded"
-                            style={{ backgroundColor: category.color || "#3b82f6" }}
+                            style={{ backgroundColor: cat.color || "#3b82f6" }}
                           />
-                          {category.name}
+                          {cat.name}
                         </div>
                       </SelectItem>
                     ))}
@@ -135,7 +162,7 @@ export default function ExpenseFormPage({ categories, expense = null, budgetCate
                   />
                   <span className="font-medium">{selectedCategory.name}</span>
                   <span className="text-sm text-muted-foreground ml-auto">
-                    ${selectedCategory.limit_amount} limit
+                    ${selectedCategory.limit_amount || 0} limit
                   </span>
                 </div>
               </div>
@@ -199,7 +226,7 @@ export default function ExpenseFormPage({ categories, expense = null, budgetCate
               </div>
             </div>
 
-            {/* Summary */}
+            {/* Expense Summary */}
             <div className="rounded-lg border bg-muted/50 p-4">
               <Label className="text-sm font-medium text-muted-foreground mb-2 block">
                 Expense Summary
@@ -216,9 +243,7 @@ export default function ExpenseFormPage({ categories, expense = null, budgetCate
                 <div className="flex justify-between">
                   <span className="text-sm">Date:</span>
                   <span className="font-medium">
-                    {formData.expense_date
-                      ? format(new Date(formData.expense_date), "MMM dd, yyyy")
-                      : "N/A"}
+                    {formData.expense_date ? format(new Date(formData.expense_date), "MMM dd, yyyy") : "N/A"}
                   </span>
                 </div>
               </div>

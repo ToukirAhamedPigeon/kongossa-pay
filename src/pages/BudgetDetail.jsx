@@ -1,24 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  DollarSign,
-  Edit,
-  Plus,
-  Trash2,
-  TrendingUp,
-} from "lucide-react";
+import { DollarSign, Edit, Plus, Trash2, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
-import {
-  getBudget,
-  deleteBudgetCategory,
-  deleteExpense,
-} from "@/api/budget";
-import BudgetCategoryForm from "./../components/dashboard/BudgetCategoryForm";
-import ExpenseForm from "./../components/dashboard/ExpenseForm";
+
+import { getBudget } from "@/api/budget";
+import { deleteExpense } from "@/api/expense";
+import { deleteBudgetCategory } from "@/api/budgetCategories";
+
+import BudgetCategoryForm from "../components/dashboard/BudgetCategoryForm";
+import ExpenseForm from "../components/dashboard/ExpenseForm";
+import Breadcrumbs from "@/components/dashboard/Breadcumbs";
 
 const BudgetDetail = () => {
   const { id } = useParams();
@@ -56,7 +51,6 @@ const BudgetDetail = () => {
     if (!window.confirm("Delete this category?")) return;
     try {
       await deleteBudgetCategory(categoryId);
-      toast({ title: "Category deleted" });
       fetchBudget();
     } catch (err) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -68,27 +62,33 @@ const BudgetDetail = () => {
     try {
       await deleteExpense(expenseId);
       toast({ title: "Expense deleted" });
-      fetchBudget();
+      setTimeout(() => {
+        fetchBudget();
+      }, 500);
     } catch (err) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
   };
 
-  if (loading) {
-    return <div className="p-6 text-center">Loading...</div>;
-  }
+  if (loading) return <div className="p-6 text-center">Loading...</div>;
+  if (!budget) return <div className="p-6 text-center text-muted">Budget not found</div>;
 
-  if (!budget) {
-    return <div className="p-6 text-center text-muted">Budget not found</div>;
-  }
+  const breadcrumbs = [
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Budget Management" },
+    { label: "Budgets", href: "/budgets" },
+    { label: budget?.name || "Budget Detail" },
+  ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
+      <Breadcrumbs breadcrumbs={breadcrumbs} />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">{budget.name}</h1>
           <p className="text-sm text-muted-foreground">
-            {budget.description || "No description provided"}
+            {budget.period ? `Period: ${budget.period}` : "No period info"}
           </p>
         </div>
         <Button variant="outline" onClick={() => navigate(-1)}>
@@ -96,6 +96,7 @@ const BudgetDetail = () => {
         </Button>
       </div>
 
+      {/* Overview */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -109,11 +110,16 @@ const BudgetDetail = () => {
           </div>
           <div>
             <h3 className="font-medium">Total Expenses</h3>
-            <p>{budget.expenses?.length || 0}</p>
+            <p>
+              {budget.categories?.reduce(
+                (acc, cat) => acc + (cat.expenses?.length || 0),
+                0
+              ) || 0}
+            </p>
           </div>
           <div>
             <h3 className="font-medium">Total Amount</h3>
-            <p>${budget.total_amount || 0}</p>
+            <p>${budget.totalAmount || 0}</p>
           </div>
         </CardContent>
       </Card>
@@ -124,7 +130,12 @@ const BudgetDetail = () => {
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <TrendingUp className="w-5 h-5" /> Categories
           </h2>
-          <Button onClick={() => { setEditingCategory(null); setShowCategoryForm(true); }}>
+          <Button
+            onClick={() => {
+              setEditingCategory(null);
+              setShowCategoryForm(true);
+            }}
+          >
             <Plus className="w-4 h-4 mr-2" /> Add Category
           </Button>
         </div>
@@ -167,7 +178,12 @@ const BudgetDetail = () => {
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <DollarSign className="w-5 h-5" /> Expenses
           </h2>
-          <Button onClick={() => { setEditingExpense(null); setShowExpenseForm(true); }}>
+          <Button
+            onClick={() => {
+              setEditingExpense(null);
+              setShowExpenseForm(true);
+            }}
+          >
             <Plus className="w-4 h-4 mr-2" /> Add Expense
           </Button>
         </div>
@@ -175,7 +191,7 @@ const BudgetDetail = () => {
           {budget.expenses?.map((exp) => (
             <Card key={exp.id}>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{exp.name}</CardTitle>
+                <CardTitle>{exp.budgetCategoryName || "N/A"}</CardTitle>
                 <div className="flex gap-2">
                   <Badge variant="secondary">${exp.amount}</Badge>
                   <Button
@@ -198,14 +214,14 @@ const BudgetDetail = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">{exp.description}</p>
+                <p className="text-sm text-muted-foreground">{exp.title}</p>
               </CardContent>
             </Card>
           ))}
         </div>
       </div>
 
-      {/* Dialogs */}
+      {/* Category Dialog */}
       <Dialog open={showCategoryForm} onOpenChange={setShowCategoryForm}>
         <DialogContent>
           <DialogHeader>
@@ -222,7 +238,14 @@ const BudgetDetail = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showExpenseForm} onOpenChange={setShowExpenseForm}>
+      {/* Expense Dialog */}
+      <Dialog
+        open={showExpenseForm}
+        onOpenChange={(open) => {
+          setShowExpenseForm(open);
+          if (!open) setEditingExpense(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -231,9 +254,16 @@ const BudgetDetail = () => {
           </DialogHeader>
           <ExpenseForm
             budgetId={budget.id}
+            categories={budget.categories || []}
             expense={editingExpense}
-            onClose={() => setShowExpenseForm(false)}
-            onSuccess={fetchBudget}
+            budgetCategoryId={editingExpense?.budgetCategoryId || null}
+            onCancel={() => setShowExpenseForm(false)}
+            onSuccess={() => {
+               setTimeout(() => {
+                 fetchBudget();
+               }, 500);
+              setShowExpenseForm(false);
+            }}
           />
         </DialogContent>
       </Dialog>
