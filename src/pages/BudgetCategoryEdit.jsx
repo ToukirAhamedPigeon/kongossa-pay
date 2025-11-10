@@ -1,49 +1,87 @@
+// src/pages/BudgetCategoryEdit.jsx
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Breadcrumbs from "@/components/dashboard/Breadcumbs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
-import { getCreateBudgetCategoryForm, updateBudgetCategory } from "@/api/budgetCategories";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 
-export default function EditBudgetCategoryPage({ category }) {
+import {
+  getEditBudgetCategoryForm,
+  updateBudgetCategory,
+} from "@/api/budgetCategories";
+import { getCurrentUser } from "@/api/auth";
+
+export default function EditBudgetCategoryPage() {
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [budgets, setBudgets] = useState([]);
   const [form, setForm] = useState({
-    budget_id: category.budget_id || "",
-    name: category.name || "",
-    description: category.description || "",
-    type: category.type || "expense",
-    color: category.color || "#000000",
-    limit_amount: category.limit_amount || "",
+    budget_id: "",
+    name: "",
+    description: "",
+    color: "#000000",
+    limit_amount: "",
   });
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const breadcrumbs = [
     { label: "Home", url: "/" },
     { label: "Budget Categories", url: "/budget-categories" },
-    { label: "Edit", url: `/budget-categories/${category.id}/edit` },
+    { label: "Edit", url: `/budget-categories/${id}/edit` },
   ];
 
   useEffect(() => {
     const fetchFormData = async () => {
       try {
         setLoading(true);
-        const response = await getCreateBudgetCategoryForm();
-        setBudgets(response.data?.budgets || []);
+
+        const currentUser = await getCurrentUser();
+        const [categoryData, createFormData] = await Promise.all([
+          getEditBudgetCategoryForm(id), // existing category
+          createFormDataForUser(currentUser.id),
+        ]);
+
+        const category = categoryData?.data || categoryData; // handle both plain and nested responses
+        const budgetsList = createFormData?.budgets || createFormData?.data?.budgets || [];
+
+        setBudgets(budgetsList);
+
+        // ✅ Pre-fill form with existing data
+        setForm({
+          budget_id: category.budgetId?.toString() || "",
+          name: category.name || "",
+          description: category.description || "",
+          color: category.color || "#000000",
+          limit_amount: category.limitAmount?.toString() || "",
+        });
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching category edit data:", err);
       } finally {
         setLoading(false);
       }
     };
+
+    const createFormDataForUser = async (userId) => {
+      const data = await import("@/api/budgetCategories").then((mod) =>
+        mod.getCreateBudgetCategoryForm(userId)
+      );
+      return data;
+    };
+
     fetchFormData();
-  }, []);
+  }, [id]);
 
   const handleChange = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -53,11 +91,19 @@ export default function EditBudgetCategoryPage({ category }) {
     e.preventDefault();
     setSubmitting(true);
     setErrors({});
+
     try {
-      await updateBudgetCategory(category.id, form);
-      navigate("/budget-categories");
+      const payload = {
+        name: form.name,
+        description: form.description,
+        color: form.color,
+        limitAmount: Number(form.limit_amount) || 0, // ✅ camelCase fix
+      };
+
+      await updateBudgetCategory(id, payload);
+      navigate("/budgets/categories");
     } catch (err) {
-      console.error(err);
+      console.error("Error updating category:", err);
       setErrors(err.response?.data?.errors || {});
     } finally {
       setSubmitting(false);
@@ -77,6 +123,7 @@ export default function EditBudgetCategoryPage({ category }) {
             <p className="text-center py-10 text-muted-foreground">Loading...</p>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Budget Select */}
               <div className="space-y-2">
                 <Label htmlFor="budget_id">Budget</Label>
                 <Select
@@ -89,14 +136,20 @@ export default function EditBudgetCategoryPage({ category }) {
                   <SelectContent>
                     {budgets.map((budget) => (
                       <SelectItem key={budget.id} value={String(budget.id)}>
-                        {budget.name} <span className="text-sm text-muted-foreground ml-2">{budget.total_amount}$</span>
+                        {budget.name}{" "}
+                        <span className="text-sm text-muted-foreground ml-2">
+                          ${budget.totalAmount}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.budget_id && <p className="text-sm text-destructive">{errors.budget_id}</p>}
+                {errors.budget_id && (
+                  <p className="text-sm text-destructive">{errors.budget_id}</p>
+                )}
               </div>
 
+              {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="name">Category Name</Label>
                 <Input
@@ -105,21 +158,29 @@ export default function EditBudgetCategoryPage({ category }) {
                   value={form.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                 />
-                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                {errors.name && (
+                  <p className="text-sm text-destructive">{errors.name}</p>
+                )}
               </div>
 
+              {/* Description */}
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <textarea
-                  className="w-full border border-gray-300 rounded-md p-2 outline-0"
                   id="description"
+                  className="w-full border border-gray-300 rounded-md p-2 outline-0"
                   placeholder="Enter category description"
                   value={form.description}
                   onChange={(e) => handleChange("description", e.target.value)}
                 ></textarea>
-                {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+                {errors.description && (
+                  <p className="text-sm text-destructive">
+                    {errors.description}
+                  </p>
+                )}
               </div>
 
+              {/* Color */}
               <div className="space-y-2">
                 <Label htmlFor="color">Color</Label>
                 <Input
@@ -129,9 +190,12 @@ export default function EditBudgetCategoryPage({ category }) {
                   onChange={(e) => handleChange("color", e.target.value)}
                   className="h-10"
                 />
-                {errors.color && <p className="text-sm text-destructive">{errors.color}</p>}
+                {errors.color && (
+                  <p className="text-sm text-destructive">{errors.color}</p>
+                )}
               </div>
 
+              {/* Limit */}
               <div className="space-y-2">
                 <Label htmlFor="limit_amount">Limit Amount</Label>
                 <Input
@@ -142,9 +206,14 @@ export default function EditBudgetCategoryPage({ category }) {
                   value={form.limit_amount}
                   onChange={(e) => handleChange("limit_amount", e.target.value)}
                 />
-                {errors.limit_amount && <p className="text-sm text-destructive">{errors.limit_amount}</p>}
+                {errors.limit_amount && (
+                  <p className="text-sm text-destructive">
+                    {errors.limit_amount}
+                  </p>
+                )}
               </div>
 
+              {/* Submit */}
               <Button type="submit" disabled={submitting}>
                 {submitting ? "Updating..." : "Update Category"}
               </Button>

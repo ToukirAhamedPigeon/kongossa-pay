@@ -21,7 +21,7 @@ export const getExpenseById = async (id) => {
 
 // GET form data for creating expense
 export const getExpenseCreateForm = async () => {
-  const res = api.get(`${API_BASE}/expenses/create`);
+  const res = await api.get(`${API_BASE}/expenses/create`);
   return res.data;
 };
 

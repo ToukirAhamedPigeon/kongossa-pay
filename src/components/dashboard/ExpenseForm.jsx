@@ -95,15 +95,15 @@ export default function ExpenseForm({ categories = [], expense = null, budgetCat
 
   const selectedCategory = categories.find((c) => c.id === formData.budget_category_id) || null;
 
-  const breadcrumbs = [
-    { label: "Dashboard", href: "/dashboard" },
-    { label: "Expenses", href: "/expenses" },
-    { label: isEditing ? "Edit Expense" : "Add Expense" },
-  ];
+  // const breadcrumbs = [
+  //   { label: "Dashboard", href: "/dashboard" },
+  //   { label: "Expenses", href: "/expenses" },
+  //   { label: isEditing ? "Edit Expense" : "Add Expense" },
+  // ];
 
   return (
     <div className="space-y-6 mt-10">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
+      {/* <Breadcrumbs breadcrumbs={breadcrumbs} /> */}
 
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader>

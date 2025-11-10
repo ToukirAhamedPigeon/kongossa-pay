@@ -36,8 +36,9 @@ export const addExpenseToCategory = async (id, expenseData) => {
 };
 
 // Optional: for frontend forms if needed
-export const getCreateBudgetCategoryForm = async () => {
-  return api.get(`${API_BASE}/budget-categories/create`);
+export const getCreateBudgetCategoryForm = async (userId) => {
+  const response = await api.get(`${API_BASE}/budget-categories/create?user_id=${userId}`);
+  return response?.data?.data;
 };
 
 export const getEditBudgetCategoryForm = async (id) => {

@@ -26,7 +26,7 @@ const BudgetCategoryForm = ({ budgetId, category, onClose, onSuccess }) => {
 
     // Basic validation
     if (!name.trim()) {
-      //toast({ title: "Validation Error", description: "Name is required.", variant: "destructive" });
+      // toast({ title: "Validation Error", description: "Name is required.", variant: "destructive" });
       return;
     }
 

@@ -86,7 +86,7 @@ export default function BudgetCategoryList() {
             Manage your spending limits and track your financial goals.
           </p>
         </div>
-        <Button onClick={() => navigate("/budget-categories/create")}>
+        <Button onClick={() => navigate("/budgets/categories/create")}>
           <Plus className="mr-2 h-4 w-4" />
           Create Category
         </Button>
@@ -127,7 +127,7 @@ export default function BudgetCategoryList() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/budget-categories/${category.id}/edit`)}
+                        onClick={() => navigate(`/budgets/categories/${category.id}/edit`)}
                       >
                         <Edit className="mr-1 h-4 w-4" />
                         Edit

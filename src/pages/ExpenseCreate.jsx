@@ -1,26 +1,31 @@
 // src/pages/ExpensesCreate.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import Breadcrumbs from "@/components/dashboard/Breadcumbs";
 import ExpenseForm from "@/components/dashboard/ExpenseForm";
-import { getExpenseCreateForm, createExpense } from "@/api/expense";
-// import { toast } from "@/components/ui/use-toast"; 
+import { getExpenseCreateForm } from "@/api/expense";
+import { toast } from "@/components/ui/use-toast";
 
 export default function CreateExpense() {
   const navigate = useNavigate();
-
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch categories / form data
+  // ✅ Fetch all available budget categories from backend
   const fetchFormData = async () => {
     try {
       setLoading(true);
       const data = await getExpenseCreateForm();
-      setCategories(data.budgetCategories || []); // match API response structure
+      // Make sure the backend returns an array of categories under "budgetCategories"
+      // Adjust this line if your key is different
+      setCategories(data?.budgetCategories || []);
     } catch (err) {
       console.error("Failed to fetch expense form data:", err);
+      // toast({
+      //   title: "Failed to load form data",
+      //   description: "Could not fetch available budget categories.",
+      //   variant: "destructive",
+      // });
     } finally {
       setLoading(false);
     }
@@ -30,24 +35,18 @@ export default function CreateExpense() {
     fetchFormData();
   }, []);
 
-  const handleSuccess = async (formData) => {
-    try {
-      await createExpense(formData);
-    //   toast({
-    //     title: "Expense Added",
-    //     description: "Your expense has been recorded successfully.",
-    //   });
-      navigate("/expenses");
-    } catch (err) {
-    //   toast({
-    //     title: "Error",
-    //     description: "Failed to create expense. Please try again.",
-    //     variant: "destructive",
-    //   });
-      console.error(err);
-    }
+  // ✅ Called after ExpenseForm successfully creates an expense
+  const handleSuccess = async () => {
+    // toast({
+    //   title: "Expense Added",
+    //   description: "Your expense has been recorded successfully.",
+    // });
+
+    // Redirect user to expenses list or previous page
+    navigate("/expenses");
   };
 
+  // ✅ Cancel and return to Expenses page
   const handleCancel = () => {
     navigate("/expenses");
   };

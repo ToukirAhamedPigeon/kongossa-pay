@@ -75,7 +75,7 @@ export default function ExpensesList() {
 
       setBudgetCategories(allCategories);
       setExpenses(expensesList);
-      console.log(allCategories, expensesList);
+      //console.log(allCategories, expensesList);
     } catch (err) {
       console.error(err);
       setError("Failed to load expenses. Please try again.");
@@ -290,7 +290,7 @@ export default function ExpensesList() {
                     </TableCell>
                     <TableCell>{new Date(expense.expenseDate).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <DropdownMenu>
+                      {/* <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm">
                             <MoreHorizontal className="h-4 w-4" />
@@ -307,7 +307,7 @@ export default function ExpensesList() {
                             <Trash2 className="mr-2 h-4 w-4" /> Delete Expense
                           </DropdownMenuItem>
                         </DropdownMenuContent>
-                      </DropdownMenu>
+                      </DropdownMenu> */}
                     </TableCell>
                   </TableRow>
                 ))}

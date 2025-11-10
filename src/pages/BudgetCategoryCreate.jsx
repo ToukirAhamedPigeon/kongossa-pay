@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // import { toast } from "@/components/ui/useToast";
 import { getCreateBudgetCategoryForm, createBudgetCategory } from "@/api/budgetCategories";
+import { getCurrentUser } from "@/api/auth";
 
 export default function CreateBudgetCategoryPage() {
   const navigate = useNavigate();
@@ -32,23 +33,18 @@ export default function CreateBudgetCategoryPage() {
   ];
 
   useEffect(() => {
-    // Load budgets for the select
     const fetchFormData = async () => {
       try {
         setLoading(true);
-        const response = await getCreateBudgetCategoryForm();
-        setBudgets(response.data?.budgets || []);
+        const currentUser = await getCurrentUser();
+        const data = await getCreateBudgetCategoryForm(currentUser?.id);
+        setBudgets(data?.budgets || []); 
       } catch (err) {
         console.error(err);
-        // toast({
-        //   title: "Error",
-        //   description: "Failed to load budgets.",
-        // });
       } finally {
         setLoading(false);
       }
     };
-
     fetchFormData();
   }, []);
 
@@ -56,26 +52,26 @@ export default function CreateBudgetCategoryPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setErrors({});
 
     try {
-      await createBudgetCategory(form.budget_id, form);
-    //   toast({
-    //     title: "Success",
-    //     description: "Budget category created successfully.",
-    //   });
-      navigate("/budget-categories");
+      // Convert frontend snake_case form to backend camelCase DTO
+      const payload = {
+        name: form.name,
+        description: form.description,
+        color: form.color,
+        limitAmount: Number(form.limit_amount) || 0, // ✅ correct key name
+      };
+
+      await createBudgetCategory(form.budget_id, payload);
+
+      navigate("/budget/categories");
     } catch (err) {
       console.error(err);
-      // Assuming your API returns errors in err.response.data.errors
       setErrors(err.response?.data?.errors || {});
-    //   toast({
-    //     title: "Error",
-    //     description: "Failed to create budget category.",
-    //   });
     } finally {
       setSubmitting(false);
     }
@@ -106,7 +102,7 @@ export default function CreateBudgetCategoryPage() {
                   <SelectContent>
                     {budgets.map((budget) => (
                       <SelectItem key={budget.id} value={String(budget.id)}>
-                        {budget.name} <span className="text-sm text-muted-foreground ml-2">{budget.total_amount}$</span>
+                        {budget.name} <span className="text-sm text-muted-foreground ml-2">{budget.totalAmount}$</span>
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -324,7 +324,7 @@ export default function BudgetsList() {
                       size="sm"
                       variant="outline"
                       onClick={() =>
-                        navigate(`/budgets/${budget.id}/expenses/create`)
+                        navigate(`/expenses/create`)
                       }
                     >
                       <Plus className="mr-2 h-3 w-3" /> Add Expense
