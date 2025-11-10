@@ -32,7 +32,6 @@ import Breadcrumbs from "@/components/dashboard/Breadcumbs";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getBudgets } from "../api/budget";
 
-
 export default function BudgetsList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -55,7 +54,7 @@ export default function BudgetsList() {
         period: selectedPeriod === "all" ? undefined : selectedPeriod,
         page: currentPage,
       };
-      const data = await getBudgets({ params }); // support query params
+      const data = await getBudgets({ params });
       setBudgets(data);
     } catch (err) {
       console.error(err);
@@ -67,7 +66,20 @@ export default function BudgetsList() {
 
   useEffect(() => {
     fetchBudgets();
-  }, [searchParams]); // refetch when filters or pagination change
+  }, [searchParams]);
+
+  // 🔹 Debounce search input
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      const params = new URLSearchParams(searchParams);
+      if (searchTerm) params.set("search", searchTerm);
+      else params.delete("search");
+      params.set("page", 1);
+      setSearchParams(params);
+    }, 500);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -149,7 +161,7 @@ export default function BudgetsList() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-end">
-            <form onSubmit={handleSearch} className="flex-1">
+            <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -159,7 +171,14 @@ export default function BudgetsList() {
                   className="pl-10"
                 />
               </div>
-            </form>
+            </div>
+
+            <Button
+              type="button" // ✅ prevent form submission
+              onClick={handleSearch}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
 
             <div className="flex gap-2">
               <Select value={selectedPeriod} onValueChange={handlePeriodFilter}>
@@ -183,7 +202,7 @@ export default function BudgetsList() {
       </Card>
 
       {/* Budgets List */}
-      {!budgets?.length ? (
+      {!budgets?.data?.length ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
@@ -201,7 +220,7 @@ export default function BudgetsList() {
         </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {budgets.map((budget) => (
+          {budgets.data.map((budget) => (
             <Card key={budget.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
@@ -239,7 +258,9 @@ export default function BudgetsList() {
                   <div className="flex justify-between items-end">
                     <div>
                       <p className="text-sm text-muted-foreground">Total Budget</p>
-                      <p className="text-2xl font-bold">${budget.totalAmount.toLocaleString()}</p>
+                      <p className="text-2xl font-bold">
+                        ${budget.totalAmount.toLocaleString()}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-muted-foreground">Spent</p>
@@ -326,12 +347,20 @@ export default function BudgetsList() {
           </p>
           <div className="flex gap-2">
             {budgets.current_page > 1 && (
-              <Button variant="outline" size="sm" onClick={() => handlePageChange(budgets.current_page - 1)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(budgets.current_page - 1)}
+              >
                 Previous
               </Button>
             )}
             {budgets.current_page < budgets.last_page && (
-              <Button variant="outline" size="sm" onClick={() => handlePageChange(budgets.current_page + 1)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(budgets.current_page + 1)}
+              >
                 Next
               </Button>
             )}

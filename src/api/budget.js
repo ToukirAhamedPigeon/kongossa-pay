@@ -4,8 +4,8 @@ import api from "../lib/axios";
 // Budget API Functions
 // ----------------------------
 
-export async function getBudgets() {
-  const res = await api.get("/budgets");
+export async function getBudgets({ params }) {
+  const res = await api.get("/budgets", { params });
   return res.data;
 }
 
