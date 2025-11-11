@@ -80,15 +80,24 @@ export default function CreateTontine() {
           onCancel={handleCancel}
           onSubmit={async (data) => {
             try {
-              await createTontine(data);
+              const payload = {
+                name: data.name,
+                description: data.description,
+                type: data.tontine_type_id, // 🟢 matches `type` in DTO
+                contributionAmount: Number(data.amount), // 🟢 matches DTO
+                contributionFrequency: data.cycle, // 🟢 matches DTO
+                creatorId: 1, // 🧠 TODO: replace with actual logged-in user ID
+              };
+
+              await createTontine(payload);
               handleSuccess();
             } catch (err) {
               console.error(err);
-            //   toast({
-            //     title: "Error",
-            //     description: "Failed to create tontine. Please try again.",
-            //     variant: "destructive",
-            //   });
+              // toast({
+              //   title: "Error",
+              //   description: "Failed to create tontine. Please try again.",
+              //   variant: "destructive",
+              // });
             }
           }}
         />

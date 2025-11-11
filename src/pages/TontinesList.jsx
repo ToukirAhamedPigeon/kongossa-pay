@@ -1,21 +1,17 @@
-import { useEffect, useState, useRef, FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  Building2,
-  Edit,
-  Eye,
-  Phone,
-  Plus,
-  Search,
-  Trash2,
-  User as UserIcon,
-} from "lucide-react";
+import React, { useEffect, useState, FormEvent } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { getTontines, deleteTontine } from "@/api/tontines";
 
-import Breadcrumbs from "@/components/dashboard/Breadcumbs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import  Breadcrumbs from "@/components/dashboard/Breadcumbs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -24,420 +20,404 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
-import { ConfirmationDialog } from "@/components/dashboard/ConfirmationDialog";
 
 import {
-  getUsers,
-  deleteUser,
-  updateUser,
-} from "@/api/users";
+  Calendar,
+  Clock,
+  DollarSign,
+  Edit,
+  Eye,
+  Filter,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+  Users,
+} from "lucide-react";
 
-import { format, formatDistanceToNow } from "date-fns";
-
-export default function UsersList() {
+export default function TontinesList() {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [users, setUsers] = useState({
-    data: [],
+  const [tontines, setTontines] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
-    per_page: 10,
+    per_page: 20,
     total: 0,
   });
-
-  const [stats, setStats] = useState({
-    total_users: 0,
-    active_users: 0,
-    inactive_users: 0,
-    total_roles: 0,
+  const [filters, setFilters] = useState({
+    search: searchParams.get("search") || "",
+    type: searchParams.get("type") || "",
+    status: searchParams.get("status") || "",
   });
 
-  const [roles, setRoles] = useState([]);
-  const [filters, setFilters] = useState({ search: "" });
-  const [loading, setLoading] = useState(false);
-  const [userToDelete, setUserToDelete] = useState(null);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const inputRef = useRef(null);
-
-  const fetchUsers = async (page = 1) => {
+  // 🟢 Fetch tontines from backend
+  const fetchTontines = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await getUsers({ search: filters.search, page });
-      const formatted = Array.isArray(response)
-        ? { data: response, current_page: 1, last_page: 1, per_page: 10, total: response.length }
-        : {
-            data: Array.isArray(response.data) ? response.data : [],
-            current_page: response.current_page || 1,
-            last_page: response.last_page || 1,
-            per_page: response.per_page || 10,
-            total: response.total || 0,
-          };
+      const params = {
+        search: filters.search,
+        type: filters.type,
+        status: filters.status,
+        page: searchParams.get("page") || 1,
+      };
+      const res = await getTontines(params);
+      const data = res.data;
 
-      setUsers(formatted);
-
-      // Optional: if backend sends stats/roles in same payload
-      if (response.stats) setStats(response.stats);
-      if (response.roles) setRoles(response.roles);
+      // Backend should return pagination info
+      setTontines(data.data || data);
+      setPagination({
+        current_page: data.current_page || 1,
+        last_page: data.last_page || 1,
+        per_page: data.per_page || 10,
+        total: data.total || data.data?.length || 0,
+      });
     } catch (err) {
-      console.error("Failed to fetch users:", err);
-      setUsers({ data: [], current_page: 1, last_page: 1, per_page: 10, total: 0 });
+      console.error("Failed to load tontines", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, [filters.search]);
+    fetchTontines();
+  }, [searchParams]);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchUsers(1);
+    const newParams = new URLSearchParams(searchParams);
+    if (filters.search) newParams.set("search", filters.search);
+    else newParams.delete("search");
+    setSearchParams(newParams);
   };
 
-  const handleStatusChange = async (user) => {
+  const handleFilter = (key, value) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value && value !== "all") newParams.set(key, value);
+    else newParams.delete(key);
+    setSearchParams(newParams);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this tontine?")) return;
     try {
-      await updateUser(user.id, {
-        status: user.status === "Active" ? "inactive" : "active",
-      });
-      toast({
-        title: "Status Updated",
-        description: `User status changed to ${
-          user.status === "Active" ? "inactive" : "active"
-        }.`,
-      });
-      fetchUsers(users.current_page);
+      await deleteTontine(id);
+      fetchTontines();
     } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to update status.",
-        variant: "destructive",
-      });
+      console.error("Failed to delete tontine", err);
     }
   };
 
-  const handleRoleChange = async (userId, role) => {
-    try {
-      await updateUser(userId, { role });
-      toast({
-        title: "Role Updated",
-        description: "User role has been successfully updated.",
-      });
-      fetchUsers(users.current_page);
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to update role.",
-        variant: "destructive",
-      });
+  const getTypeBadgeColor = (type) => {
+    switch (type) {
+      case "friends":
+        return "bg-blue-100 text-blue-800";
+      case "family":
+        return "bg-green-100 text-green-800";
+      case "savings":
+        return "bg-purple-100 text-purple-800";
+      case "investment":
+        return "bg-orange-100 text-orange-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  const handleDelete = (user) => {
-    setUserToDelete(user);
-    setIsConfirmOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!userToDelete) return;
-    setIsDeleting(true);
-    try {
-      await deleteUser(userToDelete.id);
-      toast({
-        title: "User Deleted",
-        description: `${userToDelete.name} has been removed.`,
-      });
-      fetchUsers(users.current_page);
-    } catch (err) {
-      toast({
-        title: "Delete Failed",
-        description: "An error occurred while deleting user.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleting(false);
-      setIsConfirmOpen(false);
-      setUserToDelete(null);
+  const getStatusBadgeColor = (status) => {
+    switch (status) {
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "completed":
+        return "bg-gray-100 text-gray-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
-
-  const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  if (!dateString || isNaN(date.getTime())) return "N/A";
-
-  const now = new Date();
-  return now.getTime() - date.getTime() < 7 * 24 * 60 * 60 * 1000
-    ? formatDistanceToNow(date, { addSuffix: true })
-    : format(date, "PPP");
-};
-
 
   const breadcrumbs = [
     { label: "Dashboard", href: "/dashboard" },
-    { label: "Users" },
+    { label: "E-Tontine" },
+    { label: "My Tontines" },
   ];
+
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-64 text-muted-foreground">
+        Loading tontines...
+      </div>
+    );
 
   return (
     <div className="space-y-6 mt-10">
-      {breadcrumbs && <Breadcrumbs breadcrumbs={breadcrumbs} />}
+      <Breadcrumbs breadcrumbs={breadcrumbs} />
 
-      {/* Header Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total_users}</div>
-            <p className="text-xs text-muted-foreground">Full System</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Active Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.active_users}</div>
-            <p className="text-xs text-muted-foreground">In System</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Inactive Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.inactive_users}</div>
-            <p className="text-xs text-muted-foreground">In System</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Roles</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total_roles}</div>
-            <p className="text-xs text-muted-foreground">In System</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Search & Create */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">All Users</h2>
-        <div className="flex items-center gap-4">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search by name, email, phone..."
-              className="pl-8 w-full"
-              value={filters.search}
-              ref={inputRef}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            />
-          </div>
-          <Button onClick={() => navigate("/users/create")}>
-            <Plus className="w-4 h-4 mr-2" /> Create User
-          </Button>
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">My Tontines</h1>
+          <p className="text-muted-foreground">
+            Manage your collaborative savings groups and track contributions.
+          </p>
         </div>
+        <Button onClick={() => navigate("/tontines/create")}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Tontine
+        </Button>
       </div>
 
-      {/* User Table */}
+      {/* Filters */}
       <Card>
-        <CardContent className="p-0">
-          {loading ? (
-            <p className="text-center py-10 text-muted-foreground">Loading...</p>
-          ) : users.data.length === 0 ? (
-            <p className="text-center py-10 text-muted-foreground">No users found.</p>
-          ) : (
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.data.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.avatar} alt={user.name} />
-                          <AvatarFallback>
-                            {user.name?.split(" ").map((n) => n[0]).join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium">{user.name}</div>
-                          {user.company_name && (
-                            <div className="text-xs text-muted-foreground">
-                              {user.company_name}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="text-sm">{user.email}</div>
-                        {user.phone && (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Phone className="h-3 w-3" /> {user.phone}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          user.user_type === "business_merchant"
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
-                        {user.user_type === "business_merchant" ? (
-                          <>
-                            <Building2 className="w-3 h-3 mr-1" /> Business
-                          </>
-                        ) : (
-                          <>
-                            <UserIcon className="w-3 h-3 mr-1" /> Personal
-                          </>
-                        )}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          user.status === "Active"
-                            ? "default"
-                            : "secondary"
-                        }
-                        className="capitalize cursor-pointer"
-                        onClick={() => handleStatusChange(user)}
-                      >
-                        {user.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        disabled={user.id === 1}
-                        defaultValue={user.role?.toLowerCase() || ""}
-                        onValueChange={(value) =>
-                          handleRoleChange(user.id, value)
-                        }
-                      >
-                        <SelectTrigger className="w-[130px]">
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {roles.map((role) => (
-                            <SelectItem
-                              key={role.id}
-                              value={role.name.toLowerCase()}
-                            >
-                              {role.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>{formatDate(user.created_at)}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/users/${user.id}`)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/users/${user.id}/edit`)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        {user.id !== 1 && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(user)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end">
+            <form onSubmit={handleSearch} className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search tontines..."
+                  value={filters.search}
+                  onChange={(e) =>
+                    setFilters({ ...filters, search: e.target.value })
+                  }
+                  className="pl-10"
+                />
+              </div>
+            </form>
+
+            <div className="flex gap-2">
+              <Select
+                value={filters.type}
+                onValueChange={(v) => {
+                  setFilters({ ...filters, type: v });
+                  handleFilter("type", v);
+                }}
+              >
+                <SelectTrigger className="w-32">
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="friends">Friends</SelectItem>
+                  <SelectItem value="family">Family</SelectItem>
+                  <SelectItem value="savings">Savings</SelectItem>
+                  <SelectItem value="investment">Investment</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filters.status}
+                onValueChange={(v) => {
+                  setFilters({ ...filters, status: v });
+                  handleFilter("status", v);
+                }}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button type="submit" onClick={handleSearch}>
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
+      {/* Tontines Grid */}
+      {tontines.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <Users className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No tontines found</h3>
+            <p className="text-muted-foreground text-center mb-6">
+              {filters.search || filters.type || filters.status
+                ? "Try adjusting your search criteria or filters."
+                : "Start building wealth together by creating your first tontine."}
+            </p>
+            <Button onClick={() => navigate("/tontines/create")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Your First Tontine
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {tontines.map((tontine) => (
+            <Card key={tontine.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">{tontine.name}</CardTitle>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge
+                        variant="secondary"
+                        className={getTypeBadgeColor(tontine.type)}
+                      >
+                        {tontine.type}
+                      </Badge>
+                      <Badge
+                        variant="secondary"
+                        className={getStatusBadgeColor(tontine.status)}
+                      >
+                        {tontine.status}
+                      </Badge>
+                      {tontine.is_admin && (
+                        <Badge
+                          variant="outline"
+                          className="bg-yellow-50 text-yellow-800"
+                        >
+                          Admin
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link to={`/tontines/${tontine.id}`}>
+                          <Eye className="mr-2 h-4 w-4" /> View Details
+                        </Link>
+                      </DropdownMenuItem>
+                      {tontine.is_admin && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link to={`/tontines/${tontine.id}/edit`}>
+                              <Edit className="mr-2 h-4 w-4" /> Edit
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600 cursor-pointer"
+                            onClick={() => handleDelete(tontine.id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardHeader>
+
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Contribution
+                      </p>
+                      <p className="text-lg font-bold">
+                        ${tontine.contributionAmount}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {tontine.frequency}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Members</p>
+                      <p className="text-lg font-bold">
+                        {tontine.members_count}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        participants
+                      </p>
+                    </div>
+                  </div>
+
+                  {tontine.next_payout_date && (
+                    <div className="bg-muted/50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-muted-foreground">
+                          Next Payout:
+                        </span>
+                      </div>
+                      <p className="font-medium">
+                        {new Date(
+                          tontine.nextPayoutDate
+                        ).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    <span>{tontine.duration_months} months duration</span>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button size="sm" asChild className="flex-1">
+                      <Link to={`/tontines/${tontine.id}`}>
+                        <Eye className="mr-2 h-3 w-3" />
+                        View
+                      </Link>
+                    </Button>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link to={`/tontines/${tontine.id}/contribute`}>
+                        <DollarSign className="mr-2 h-3 w-3" />
+                        Contribute
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
       {/* Pagination */}
-      {users.last_page > 1 && (
-        <div className="flex items-center justify-between mt-6">
+      {pagination.last_page > 1 && (
+        <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing{" "}
+            Showing {(pagination.current_page - 1) * pagination.per_page + 1} to{" "}
             {Math.min(
-              (users.current_page - 1) * users.per_page + 1,
-              users.total
+              pagination.current_page * pagination.per_page,
+              pagination.total
             )}{" "}
-            to{" "}
-            {Math.min(users.current_page * users.per_page, users.total)} of{" "}
-            {users.total} users
+            of {pagination.total}
           </p>
           <div className="flex gap-2">
-            {users.current_page > 1 && (
+            {pagination.current_page > 1 && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => fetchUsers(users.current_page - 1)}
+                onClick={() =>
+                  setSearchParams({ page: pagination.current_page - 1 })
+                }
               >
                 Previous
               </Button>
             )}
-            {users.current_page < users.last_page && (
+            {pagination.current_page < pagination.last_page && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => fetchUsers(users.current_page + 1)}
+                onClick={() =>
+                  setSearchParams({ page: pagination.current_page + 1 })
+                }
               >
                 Next
               </Button>
             )}
           </div>
         </div>
-      )}
-
-      {/* Delete Confirmation */}
-      {userToDelete && (
-        <ConfirmationDialog
-          open={isConfirmOpen}
-          onOpenChange={setIsConfirmOpen}
-          title="Are you sure?"
-          description={`You are about to delete "${userToDelete.name}". This action cannot be undone.`}
-          onConfirm={confirmDelete}
-          variant="destructive"
-          confirmText={isDeleting ? "Deleting..." : "Yes, delete"}
-          loading={isDeleting}
-        />
       )}
     </div>
   );

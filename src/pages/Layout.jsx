@@ -107,7 +107,7 @@ const isMarketingPage = marketingPages.includes(currentPageName);
       icon: Banknote,
       children: [
         { title: "My Tontines", url: "/tontines", icon: Banknote },
-        { title: "Invitations", url: "/tontines/invitations", icon: MailPlus },
+        { title: "Invitations", url: "/tontines/invite", icon: MailPlus },
         { title: "Tontine Create", url: "/tontines/create", icon: PlusCircle },
       ],
     },
@@ -146,7 +146,7 @@ const isMarketingPage = marketingPages.includes(currentPageName);
     <LanguageProvider>
       <div className="min-h-screen flex bg-gray-50">
         {/* 🖥️ Desktop Sidebar */}
-        <aside className="hidden md:flex flex-col bg-white border-r h-screen w-72 fixed left-0 top-0 z-40">
+        <aside className="hidden md:flex flex-col bg-white border-r h-screen w-60 fixed left-0 top-0 z-40">
           <div className="flex items-center gap-2 p-4 border-b">
             <img src="/logo.png" alt="Logo" className="h-10" />
           </div>
@@ -193,7 +193,7 @@ const isMarketingPage = marketingPages.includes(currentPageName);
         </Sheet>
 
         {/* Main Content */}
-        <main className="flex-1 md:ml-72 p-6 transition-all duration-300">
+        <main className="flex-1 md:ml-60 p-6 transition-all duration-300">
           <PageTransition>
             <Outlet />
           </PageTransition>

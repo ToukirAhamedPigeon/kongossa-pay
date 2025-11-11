@@ -36,6 +36,7 @@ import AdminFeeManagement from "@/pages/AdminFeeManagement";
 
 import TontinesList from "@/pages/TontinesList";
 import TontineInvite from "@/pages/TontineInvite";
+import ContributionList from "@/pages/ContributionList";
 import TontineCreate from "@/pages/TontineCreate";
 import TontineDetail from "@/pages/TontineDetail";
 import TontineEdit from "@/pages/TontineEdit";
@@ -79,6 +80,7 @@ export const routes = [
     { path: "/tontines/create", element: <TontineCreate />, name: "TontineCreate", permissions: ["read:dashboard"] },
     { path: "/tontines/invite", element: <TontineInvite />, name: "TontineInvite", permissions: ["read:dashboard"] },
     { path: "/tontines/:id", element: <TontineDetail />, name: "TontineDetail", permissions: ["read:dashboard"] },
+    { path: "/tontines/:id/contribute", element: <ContributionList />, name: "ContributionList", permissions: ["read:dashboard"] },
     { path: "/tontines/:id/edit", element: <TontineEdit />, name: "TontineEdit", permissions: ["read:dashboard"] },
 
 

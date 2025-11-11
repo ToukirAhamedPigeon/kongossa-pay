@@ -222,8 +222,8 @@ export default function ExpensesList() {
                   </SelectContent>
                 </Select>
 
-                <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-32" />
-                <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-32" />
+                <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-36" />
+                <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-36" />
 
                 <Button type="submit">
                   <Search className="h-4 w-4" />
