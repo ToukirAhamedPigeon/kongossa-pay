@@ -2,7 +2,7 @@ import React, { useEffect, useState, FormEvent } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { getTontines, deleteTontine } from "@/api/tontines";
 
-import  Breadcrumbs from "@/components/dashboard/Breadcumbs";
+import Breadcrumbs from "@/components/dashboard/Breadcumbs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,7 +53,10 @@ export default function TontinesList() {
     status: searchParams.get("status") || "",
   });
 
-  // 🟢 Fetch tontines from backend
+  useEffect(() => {
+    document.title = "My Tontines"; // replaces <Head title="My Tontines" />
+  }, []);
+
   const fetchTontines = async () => {
     setLoading(true);
     try {
@@ -66,8 +69,7 @@ export default function TontinesList() {
       const res = await getTontines(params);
       const data = res.data;
 
-      // Backend should return pagination info
-      setTontines(data.data || data);
+      setTontines(data.data || []);
       setPagination({
         current_page: data.current_page || 1,
         last_page: data.last_page || 1,
@@ -140,7 +142,7 @@ export default function TontinesList() {
 
   const breadcrumbs = [
     { label: "Dashboard", href: "/dashboard" },
-    { label: "E-Tontine" },
+    { label: "Tontine System" },
     { label: "My Tontines" },
   ];
 
@@ -272,7 +274,7 @@ export default function TontinesList() {
                       >
                         {tontine.status}
                       </Badge>
-                      {tontine.is_admin && (
+                      {tontine.creator.role==="admin" && (
                         <Badge
                           variant="outline"
                           className="bg-yellow-50 text-yellow-800"
@@ -295,18 +297,18 @@ export default function TontinesList() {
                           <Eye className="mr-2 h-4 w-4" /> View Details
                         </Link>
                       </DropdownMenuItem>
-                      {tontine.is_admin && (
+                      {tontine.creator.role==="admin" && (
                         <>
                           <DropdownMenuItem asChild>
                             <Link to={`/tontines/${tontine.id}/edit`}>
-                              <Edit className="mr-2 h-4 w-4" /> Edit
+                              <Edit className="mr-2 h-4 w-4" /> Edit Tontine
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-red-600 cursor-pointer"
                             onClick={() => handleDelete(tontine.id)}
                           >
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete Tontine
                           </DropdownMenuItem>
                         </>
                       )}
@@ -317,22 +319,23 @@ export default function TontinesList() {
 
               <CardContent>
                 <div className="space-y-4">
+                  {/* Contribution Info */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">
                         Contribution
                       </p>
                       <p className="text-lg font-bold">
-                        ${tontine.contributionAmount}
+                        ${tontine.contributionAmount?.toFixed(2) ?? 0}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {tontine.frequency}
+                        {tontine.contributionFrequency}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Members</p>
                       <p className="text-lg font-bold">
-                        {tontine.members_count}
+                        {tontine.members?.length ?? 0}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         participants
@@ -340,6 +343,27 @@ export default function TontinesList() {
                     </div>
                   </div>
 
+                  {/* Financial Summary */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Total Contributed:
+                      </span>
+                      <span className="font-medium text-blue-600">
+                        ${tontine.contributions?.reduce((a, c) => a + c.amount, 0) ?? 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Total Collected:
+                      </span>
+                      <span className="font-medium text-green-600">
+                        ${tontine.totalPot ?? 0}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Next Payout */}
                   {tontine.next_payout_date && (
                     <div className="bg-muted/50 rounded-lg p-3">
                       <div className="flex items-center gap-2 text-sm">
@@ -350,17 +374,19 @@ export default function TontinesList() {
                       </div>
                       <p className="font-medium">
                         {new Date(
-                          tontine.nextPayoutDate
+                          tontine.next_payout_date
                         ).toLocaleDateString()}
                       </p>
                     </div>
                   )}
 
+                  {/* Duration Info */}
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock className="h-3 w-3" />
-                    <span>{tontine.duration_months} months duration</span>
+                    <span>{tontine.durationMonths ?? 0} months duration</span>
                   </div>
 
+                  {/* Action Buttons */}
                   <div className="flex gap-2 pt-2">
                     <Button size="sm" asChild className="flex-1">
                       <Link to={`/tontines/${tontine.id}`}>
@@ -391,7 +417,7 @@ export default function TontinesList() {
               pagination.current_page * pagination.per_page,
               pagination.total
             )}{" "}
-            of {pagination.total}
+            of {pagination.total} tontines
           </p>
           <div className="flex gap-2">
             {pagination.current_page > 1 && (
@@ -399,7 +425,10 @@ export default function TontinesList() {
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  setSearchParams({ page: pagination.current_page - 1 })
+                  setSearchParams({
+                    ...Object.fromEntries(searchParams.entries()),
+                    page: pagination.current_page - 1,
+                  })
                 }
               >
                 Previous
@@ -410,7 +439,10 @@ export default function TontinesList() {
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  setSearchParams({ page: pagination.current_page + 1 })
+                  setSearchParams({
+                    ...Object.fromEntries(searchParams.entries()),
+                    page: pagination.current_page + 1,
+                  })
                 }
               >
                 Next

@@ -5,7 +5,9 @@ import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -13,24 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@radix-ui/react-tooltip";
+import { Loader2, Save, Users, CircleDollarSign, HelpCircle } from "lucide-react";
 
-import { Loader2 } from "lucide-react";
 
-// 🟢 Validation Schema
+// 🧩 Zod schema for validation
 const tontineSchema = z.object({
   name: z.string().min(2, "Name is required"),
-  description: z.string().optional(),
-  amount: z.coerce.number().min(1, "Amount must be greater than 0"),
-  cycle: z.string().min(1, "Please select a cycle"),
   tontine_type_id: z.string().min(1, "Please select a tontine type"),
+  amount: z.coerce.number().min(1, "Amount must be greater than 0"),
+  cycle: z.enum(["weekly", "monthly"], { required_error: "Please select a frequency" }),
+  duration_months: z.coerce.number().min(1, "Duration must be at least 1 month"),
 });
 
 export function TontineForm({
@@ -39,26 +34,40 @@ export function TontineForm({
   onCancel,
   onSuccess,
   defaultValues = {},
+  isEditing = false,
 }) {
+
   const form = useForm({
     resolver: zodResolver(tontineSchema),
     defaultValues: {
-      name: defaultValues.name || "",
-      description: defaultValues.description || "",
-      amount: defaultValues.amount || "",
-      cycle: defaultValues.cycle || "",
-      tontine_type_id: defaultValues.tontine_type_id || "",
-    },
+        name: defaultValues.name || "",
+        tontine_type_id:
+          defaultValues.tontine_type_id ||
+          (tontineTypes.length ? String(tontineTypes[0].value) : ""),
+        amount: defaultValues.amount || 0,
+        cycle: defaultValues.cycle || "monthly",
+        duration_months: defaultValues.duration_months || 12,
+      },
   });
 
   const [submitting, setSubmitting] = React.useState(false);
+  const watchAll = form.watch();
+
+  const totalCycles =
+    watchAll.cycle === "weekly"
+      ? Math.round(watchAll.duration_months * 4.33)
+      : watchAll.duration_months;
+
+  const selectedType = tontineTypes.find(
+    (t) => String(t.value) === String(watchAll.tontine_type_id)
+  );
 
   const handleSubmit = async (values) => {
     setSubmitting(true);
     try {
       await onSubmit(values);
-      form.reset();
       if (onSuccess) onSuccess();
+      form.reset();
     } catch (err) {
       console.error(err);
     } finally {
@@ -67,136 +76,203 @@ export function TontineForm({
   };
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(handleSubmit)}
-        className="space-y-6 bg-card p-6 rounded-2xl shadow-sm"
-      >
-        {/* Tontine Name */}
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tontine Name</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Monthly Savings Circle" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <Card className="w-full max-w-3xl mx-auto">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-2xl">
+          <Users className="h-8 w-8" />
+          {isEditing ? "Edit Tontine" : "Create New Tontine"}
+        </CardTitle>
+        <CardDescription>
+          {isEditing
+            ? "Update your tontine details below."
+            : "Set up a new tontine to start collaborative savings with your group."}
+        </CardDescription>
+      </CardHeader>
 
-        {/* Description */}
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Write a short description about this tontine..."
-                  {...field}
-                  rows={3}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <CardContent>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          {/* Tontine Name */}
+          <div className="space-y-2">
+            <Label htmlFor="name">Tontine Name</Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="e.g., Family Emergency Fund"
+              {...form.register("name")}
+              required
+            />
+            {form.formState.errors.name && (
+              <p className="text-red-500 text-sm">{form.formState.errors.name.message}</p>
+            )}
+          </div>
 
-        {/* Amount */}
-        <FormField
-          control={form.control}
-          name="amount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Amount (per cycle)</FormLabel>
-              <FormControl>
+          {/* Tontine Type */}
+          <div className="space-y-2">
+            <Label htmlFor="tontine_type_id">Tontine Type</Label>
+            <Select
+              onValueChange={(val) => form.setValue("tontine_type_id", val)}
+              defaultValue={form.getValues("tontine_type_id")}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select tontine type" />
+              </SelectTrigger>
+              <SelectContent>
+                {tontineTypes.map((type) => (
+                  <SelectItem key={type.value} value={String(type.value)}>
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">{type.label}</span>
+                      <span className="text-xs text-muted-foreground">{type.description}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {form.formState.errors.tontine_type_id && (
+              <p className="text-red-500 text-sm">
+                {form.formState.errors.tontine_type_id.message}
+              </p>
+            )}
+          </div>
+
+          {/* Contribution Amount & Frequency */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Amount */}
+            <div className="space-y-2">
+              <Label htmlFor="amount">
+                Contribution Amount
+                {isEditing && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="inline w-4 h-4 ml-1 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="bg-gray-300 text-sm p-2 rounded">
+                          You can't change the price of an existing tontine.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </Label>
+              <div className="relative">
+                <CircleDollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
+                  id="amount"
                   type="number"
-                  placeholder="Enter contribution amount"
-                  {...field}
+                  placeholder="0.00"
+                  className="pl-10 w-full"
+                  disabled={isEditing}
+                  {...form.register("amount", { valueAsNumber: true })}
+                  required
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              </div>
+              {form.formState.errors.amount && (
+                <p className="text-red-500 text-sm">{form.formState.errors.amount.message}</p>
+              )}
+            </div>
 
-        {/* Cycle */}
-        <FormField
-          control={form.control}
-          name="cycle"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Cycle</FormLabel>
-              <FormControl>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a cycle" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            {/* Frequency */}
+            <div className="space-y-2">
+              <Label htmlFor="cycle">Contribution Frequency</Label>
+              <Select
+                onValueChange={(val) => form.setValue("cycle", val)}
+                defaultValue={form.getValues("cycle")}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+              {form.formState.errors.cycle && (
+                <p className="text-red-500 text-sm">{form.formState.errors.cycle.message}</p>
+              )}
+            </div>
+          </div>
 
-        {/* Tontine Type */}
-        <FormField
-          control={form.control}
-          name="tontine_type_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tontine Type</FormLabel>
-              <FormControl>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a tontine type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tontineTypes.map((type) => (
-                      <SelectItem key={type.value} value={String(type.value)} title={type.description}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {/* Duration */}
+          <div className="space-y-2">
+            <Label htmlFor="duration_months">Duration (Months)</Label>
+            <Input
+              id="duration_months"
+              type="number"
+              min="1"
+              max="60"
+              {...form.register("duration_months", { valueAsNumber: true })}
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              Total cycles: {totalCycles} {watchAll.cycle} contributions
+            </p>
+            {form.formState.errors.duration_months && (
+              <p className="text-red-500 text-sm">
+                {form.formState.errors.duration_months.message}
+              </p>
+            )}
+          </div>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-3 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={submitting}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={submitting}>
-            {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {submitting ? "Creating..." : "Create Tontine"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+          {/* Tontine Summary */}
+          <div className="rounded-lg border bg-muted/50 p-4">
+            <Label className="text-sm font-medium text-muted-foreground mb-3 block">
+              Tontine Summary
+            </Label>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm">Type:</span>
+                <Badge variant="secondary">{selectedType?.label || "—"}</Badge>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">Per-member contribution:</span>
+                <span className="font-bold">${watchAll.amount} / {watchAll.cycle}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">Duration:</span>
+                <span className="font-medium">
+                  {watchAll.duration_months} months ({totalCycles} cycles)
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">Estimated pool per cycle:</span>
+                <span className="font-bold text-green-600">
+                  ${(watchAll.amount * 10).toFixed(2)}{" "}
+                  <span className="text-xs text-muted-foreground ml-1">(10 members)</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <Button type="submit" disabled={submitting}>
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {isEditing ? "Updating..." : "Creating..."}
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  {isEditing ? "Update Tontine" : "Create Tontine"}
+                </>
+              )}
+            </Button>
+
+            {onCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+            )}
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

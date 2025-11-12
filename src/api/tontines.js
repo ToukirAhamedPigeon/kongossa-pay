@@ -1,6 +1,12 @@
 import api from "../lib/axios";
 const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:3000";
 
+
+export const getTontineTypes = async () => {
+  const res = await api.get(`${API_BASE}/tontines/types`);
+  return res.data;
+};
+
 export const createTontine = async (data) => {
   const res = await api.post(`${API_BASE}/tontines`, data);
   return res.data;
@@ -32,11 +38,6 @@ export const deleteTontine = async (id) => {
 
 export const getTontineCreateForm = async () => {
   const res = await api.get(`${API_BASE}/tontines/create`);
-  return res.data;
-};
-
-export const getTontineTypes = async () => {
-  const res = await api.get(`${API_BASE}/tontines/types`);
   return res.data;
 };
 

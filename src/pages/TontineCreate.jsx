@@ -4,9 +4,11 @@ import  Breadcrumbs  from "@/components/dashboard/Breadcumbs";
 import { TontineForm } from "@/components/dashboard/TontineForm";
 // import { useToast } from "@/hooks/use-toast";
 import { getTontineTypes, createTontine } from "../api/tontines";
+import { useSelector } from "react-redux";
 
 export default function CreateTontine() {
 //   const { toast } = useToast();
+  const user = useSelector((state) => state.auth.user);
   const navigate = useNavigate();
   const [tontineTypes, setTontineTypes] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
@@ -82,22 +84,18 @@ export default function CreateTontine() {
             try {
               const payload = {
                 name: data.name,
-                description: data.description,
-                type: data.tontine_type_id, // 🟢 matches `type` in DTO
-                contributionAmount: Number(data.amount), // 🟢 matches DTO
-                contributionFrequency: data.cycle, // 🟢 matches DTO
-                creatorId: 1, // 🧠 TODO: replace with actual logged-in user ID
+                description: data.description || "",
+                type: data.tontine_type_id, // map frontend value
+                contributionAmount: Number(data.amount),
+                contributionFrequency: data.cycle,
+                durationMonths: Number(data.duration_months),
+                creatorId: user.id, // assign creatorId from auth state
               };
 
-              await createTontine(payload);
+              await createTontine(payload); // backend will assign creatorId
               handleSuccess();
             } catch (err) {
-              console.error(err);
-              // toast({
-              //   title: "Error",
-              //   description: "Failed to create tontine. Please try again.",
-              //   variant: "destructive",
-              // });
+              console.error("Failed to create tontine:", err);
             }
           }}
         />
