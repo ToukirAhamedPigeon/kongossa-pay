@@ -37,7 +37,7 @@ export default function EditTontinePage() {
         getTontineTypes(),
       ]);
       setTontine(tontineRes);
-      setTontineTypes(typesRes);
+      setTontineTypes(typesRes.tontineTypes || []);
     } catch (err) {
       console.error(err);
       setError("Failed to load tontine data. Please try again.");
@@ -57,6 +57,7 @@ export default function EditTontinePage() {
 
   const handleSubmit = async (values) => {
     try {
+      
       await updateTontine(id, values);
     //   toast({
     //     title: "Tontine Updated",
@@ -80,7 +81,7 @@ export default function EditTontinePage() {
         {error} <button onClick={fetchTontineData}>Retry</button>
       </div>
     );
-
+    console.log(tontineTypes);
   return (
     <div className="max-w-3xl mx-auto mt-10 space-y-6">
       <Breadcrumbs breadcrumbs={breadcrumbs} />
@@ -92,6 +93,7 @@ export default function EditTontinePage() {
         defaultValues={tontine}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
+        isEditing={true}
       />
     </div>
   );

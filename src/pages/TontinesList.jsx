@@ -297,7 +297,7 @@ export default function TontinesList() {
                           <Eye className="mr-2 h-4 w-4" /> View Details
                         </Link>
                       </DropdownMenuItem>
-                      {tontine.creator.role==="admin" && (
+                      {tontine.isAdmin && (
                         <>
                           <DropdownMenuItem asChild>
                             <Link to={`/tontines/${tontine.id}/edit`}>
@@ -326,7 +326,7 @@ export default function TontinesList() {
                         Contribution
                       </p>
                       <p className="text-lg font-bold">
-                        ${tontine.contributionAmount?.toFixed(2) ?? 0}
+                        ${Number(tontine.contributionAmount || 0).toFixed(2)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {tontine.contributionFrequency}

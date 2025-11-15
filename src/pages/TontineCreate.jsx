@@ -84,12 +84,12 @@ export default function CreateTontine() {
             try {
               const payload = {
                 name: data.name,
-                description: data.description || "",
+                // description: data.description || "",
                 type: data.tontine_type_id, // map frontend value
                 contributionAmount: Number(data.amount),
                 contributionFrequency: data.cycle,
                 durationMonths: Number(data.duration_months),
-                creatorId: user.id, // assign creatorId from auth state
+                // creatorId: user.id, // assign creatorId from auth state
               };
 
               await createTontine(payload); // backend will assign creatorId

@@ -5,6 +5,7 @@ const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:3000";
 
 // Register → sends OTP
 export const registerUser = async (formData) => {
+  formData.delete("confirmPassword");
   const res = await axios.post(`${API_BASE}/auth/register`, formData, {
     withCredentials: true,
     headers: {

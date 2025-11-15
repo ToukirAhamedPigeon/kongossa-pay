@@ -37,6 +37,7 @@ export function TontineForm({
   isEditing = false,
 }) {
 
+
   const form = useForm({
     resolver: zodResolver(tontineSchema),
     defaultValues: {
@@ -44,7 +45,7 @@ export function TontineForm({
         tontine_type_id:
           defaultValues.tontine_type_id ||
           (tontineTypes.length ? String(tontineTypes[0].value) : ""),
-        amount: defaultValues.amount || 0,
+        amount: defaultValues.contributionAmount || 0,
         cycle: defaultValues.cycle || "monthly",
         duration_months: defaultValues.duration_months || 12,
       },
