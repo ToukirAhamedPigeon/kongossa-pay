@@ -1,80 +1,101 @@
-import React, { useState } from 'react';
+"use client";
+import React, { useState } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { addTontineInvite } from "../../api/tontines";
 
 export default function TontineInviteForm({ tontine, onSuccess, onCancel }) {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email) return;
-
     setSending(true);
-    setError('');
+    setError("");
 
     try {
-      // Replace with your API call
-      await fetch(`/tontines/${tontine.id}/invites`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      setEmail('');
+      await addTontineInvite(tontine.id, { email });
+      setEmail("");
       onSuccess?.();
-      alert('Invitation sent!');
     } catch (err) {
       console.error(err);
-      setError('Failed to send invitation.');
+      setError("Failed to send invitation.");
     } finally {
       setSending(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '0 auto', padding: '1rem', border: '1px solid #ccc', borderRadius: '8px' }}>
-      <h2>Invite Member to "{tontine.name}"</h2>
+    <Card className="max-w-lg mx-auto border rounded-xl shadow-sm bg-white">
+      <CardHeader className="pb-3 border-b">
+        <CardTitle className="text-xl font-semibold text-gray-800">
+          Invite Member to "{tontine.name}"
+        </CardTitle>
+      </CardHeader>
 
-      <div style={{ marginBottom: '1rem', padding: '0.5rem', border: '1px solid #eee', borderRadius: '6px' }}>
-        <p><strong>Type:</strong> {tontine.type}</p>
-        <p><strong>Contribution:</strong> ${tontine.contribution_amount} ({tontine.frequency})</p>
-      </div>
+      <CardContent className="space-y-6 pt-4">
+        {/* Tontine Details */}
+        <div className="rounded-lg border p-4 bg-gray-50 text-sm space-y-1">
+          <p>
+            <span className="font-semibold">Type:</span> {tontine.type}
+          </p>
+          <p>
+            <span className="font-semibold">Contribution:</span> $
+            {tontine.contributionAmount} ({tontine.frequency})
+          </p>
+        </div>
 
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="email">Email Address</label>
-        <input
-          id="email"
-          type="email"
-          placeholder="member@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={{ width: '100%', padding: '0.5rem', margin: '0.5rem 0', boxSizing: 'border-box' }}
-        />
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-
-        {email && (
-          <div style={{ marginBottom: '1rem', padding: '0.5rem', background: '#f0f8ff', borderRadius: '6px' }}>
-            <p>Invitation Preview:</p>
-            <ul>
-              <li>Email: {email}</li>
-              <li>Tontine: {tontine.name}</li>
-              <li>Type: {tontine.type}</li>
-              <li>Contribution: ${tontine.contribution_amount} ({tontine.frequency})</li>
-            </ul>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold">Email Address</Label>
+            <Input
+              type="email"
+              placeholder="member@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="h-10"
+            />
           </div>
-        )}
 
-        <button type="submit" disabled={sending} style={{ padding: '0.5rem 1rem', marginRight: '0.5rem' }}>
-          {sending ? 'Sending...' : 'Send Invitation'}
-        </button>
+          {error && <p className="text-sm text-red-600">{error}</p>}
 
-        {onCancel && (
-          <button type="button" onClick={onCancel} style={{ padding: '0.5rem 1rem' }}>
-            Cancel
-          </button>
-        )}
-      </form>
-    </div>
+          {/* Preview */}
+          {email && (
+            <div className="border rounded-lg p-4 bg-blue-50 text-sm space-y-1">
+              <p className="font-semibold">Invitation Preview:</p>
+              <p>Email: {email}</p>
+              <p>Tontine: {tontine.name}</p>
+              <p>
+                Contribution: ${tontine.contributionAmount} (
+                {tontine.frequency})
+              </p>
+            </div>
+          )}
+
+          {/* Buttons */}
+          <div className="flex justify-end gap-3 pt-3">
+            {onCancel && (
+              <Button
+                variant="outline"
+                type="button"
+                className="px-6"
+                onClick={onCancel}
+              >
+                Cancel
+              </Button>
+            )}
+
+            <Button type="submit" disabled={sending} className="px-6">
+              {sending ? "Sending..." : "Send Invitation"}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

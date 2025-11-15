@@ -81,7 +81,7 @@ export default function EditTontinePage() {
         {error} <button onClick={fetchTontineData}>Retry</button>
       </div>
     );
-    console.log(tontineTypes);
+
   return (
     <div className="max-w-3xl mx-auto mt-10 space-y-6">
       <Breadcrumbs breadcrumbs={breadcrumbs} />

@@ -106,7 +106,7 @@ export default function TontineInvite() {
                   <div className="space-y-1">
                     <CardTitle className="text-xl">{invite.tontine.name}</CardTitle>
                     <CardDescription>
-                      Invited on {formatDate(invite.created_at)}
+                      Invited on {formatDate(invite.createdAt)}
                     </CardDescription>
                   </div>
                   <Badge className={getTontineTypeColor(invite.tontine.type)}>
@@ -122,7 +122,7 @@ export default function TontineInvite() {
                     <div>
                       <p className="text-sm font-medium">Contribution</p>
                       <p className="text-sm text-muted-foreground">
-                        {formatCurrency(invite.tontine.contribution_amount)}
+                        {formatCurrency(invite.tontine.contributionAmount)}
                       </p>
                     </div>
                   </div>

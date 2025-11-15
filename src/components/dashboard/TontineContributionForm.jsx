@@ -1,93 +1,202 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import {
+  contributeToTontine,
+  // add other API methods if needed
+} from "../../api/tontines";
 
-export default function TontineContributionForm({ tontineMember, contribution, onSuccess, onCancel }) {
+export default function TontineContributionForm({
+  tontineMember,
+  contribution,
+  onSuccess,
+  onCancel,
+}) {
   const isEditing = !!contribution;
-  const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+  const today = new Date().toISOString().split("T")[0];
 
-  const [amount, setAmount] = useState(contribution?.amount || tontineMember.tontine.contribution_amount);
+  const [amount, setAmount] = useState(
+    contribution?.amount || tontineMember.tontine.contributionAmount
+  );
   const [date, setDate] = useState(contribution?.contribution_date || today);
-  const [status, setStatus] = useState(contribution?.status || 'pending');
+  const [status, setStatus] = useState(contribution?.status || "pending");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
 
     const payload = { amount, contribution_date: date, status };
 
     try {
       if (isEditing) {
-        await fetch(`/tontine-contributions/${contribution.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+        // UPDATE contribution
+        await contributeToTontine(contribution.id, payload);
       } else {
-        await fetch(`/tontine-members/${tontineMember.id}/contributions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+        // CREATE contribution for member
+        await contributeToTontine(tontineMember.id, payload);
       }
+
       onSuccess?.();
     } catch (err) {
-      console.error('Error submitting contribution:', err);
+      console.error("Contribution error:", err);
+      setError("Failed to submit the contribution.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: 400, margin: '0 auto', padding: 20, border: '1px solid #ccc', borderRadius: 8 }}>
-      <h2>{isEditing ? 'Edit Contribution' : 'Record Contribution'}</h2>
-      <p>Member: {tontineMember.user.name} ({tontineMember.user.email})</p>
-      <p>Tontine: {tontineMember.tontine.name}</p>
-      <p>Expected Amount: ${tontineMember.tontine.contribution_amount}</p>
+    <div
+      style={{
+        maxWidth: 450,
+        margin: "20px auto",
+        background: "#f9f9f9",
+        padding: "24px",
+        borderRadius: "12px",
+        border: "1px solid #e5e7eb",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+      }}
+    >
+      <h2 style={{ marginBottom: 10, fontSize: "20px", fontWeight: 600 }}>
+        {isEditing ? "Edit Contribution" : "Record Contribution"}
+      </h2>
 
-      <div style={{ marginBottom: 12 }}>
-        <label>Amount:</label>
-        <input
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
-          min="0"
-          step="0.01"
-          required
-          style={{ width: '100%' }}
-        />
+      <div
+        style={{
+          background: "#fff",
+          padding: "12px 16px",
+          borderRadius: "10px",
+          border: "1px solid #eee",
+          marginBottom: 18,
+          fontSize: "14px",
+        }}
+      >
+        <p>
+          <strong>Member:</strong> {tontineMember.user.fullName}
+        </p>
+        <p>
+          <strong>Tontine:</strong> {tontineMember.tontine.name}
+        </p>
+        <p>
+          <strong>Expected Amount:</strong> $
+          {tontineMember.tontine.contributionAmount}
+        </p>
       </div>
 
-      <div style={{ marginBottom: 12 }}>
-        <label>Date:</label>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          max={today}
-          required
-          style={{ width: '100%' }}
-        />
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Amount */}
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ fontWeight: 500 }}>Amount</label>
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+            min="0"
+            step="0.01"
+            required
+            style={{
+              width: "100%",
+              padding: "10px",
+              borderRadius: "8px",
+              border: "1px solid #d1d5db",
+              background: "#fff",
+            }}
+          />
+        </div>
 
-      <div style={{ marginBottom: 12 }}>
-        <label>Status:</label>
-        <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ width: '100%' }}>
-          <option value="pending">Pending</option>
-          <option value="paid">Paid</option>
-          <option value="late">Late</option>
-        </select>
-      </div>
+        {/* Date */}
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ fontWeight: 500 }}>Contribution Date</label>
+          <input
+            type="date"
+            value={date}
+            max={today}
+            onChange={(e) => setDate(e.target.value)}
+            required
+            style={{
+              width: "100%",
+              padding: "10px",
+              borderRadius: "8px",
+              border: "1px solid #d1d5db",
+              background: "#fff",
+            }}
+          />
+        </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button type="submit" disabled={loading}>
-          {loading ? (isEditing ? 'Updating...' : 'Recording...') : isEditing ? 'Update' : 'Record'}
-        </button>
-        {onCancel && (
-          <button type="button" onClick={onCancel} disabled={loading}>
-            Cancel
-          </button>
+        {/* Status */}
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ fontWeight: 500 }}>Status</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px",
+              borderRadius: "8px",
+              border: "1px solid #d1d5db",
+              background: "#fff",
+            }}
+          >
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="late">Late</option>
+          </select>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <p style={{ color: "red", fontSize: "14px", marginTop: 4 }}>
+            {error}
+          </p>
         )}
-      </div>
-    </form>
+
+        {/* Buttons */}
+        <div style={{ display: "flex", gap: "10px", marginTop: 20 }}>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              flex: 1,
+              padding: "10px",
+              background: "black",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer",
+              opacity: loading ? 0.7 : 1,
+              fontWeight: 500,
+            }}
+          >
+            {loading
+              ? isEditing
+                ? "Updating..."
+                : "Recording..."
+              : isEditing
+              ? "Update"
+              : "Record"}
+          </button>
+
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={loading}
+              style={{
+                padding: "10px",
+                background: "#e5e7eb",
+                color: "#374151",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: 500,
+              }}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </form>
+    </div>
   );
 }
