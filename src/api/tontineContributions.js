@@ -84,3 +84,10 @@ export const deleteTontineMember = async (id) => {
   const res = await api.delete(`${API_BASE}/tontine-members/${id}`);
   return res.data;
 };
+
+export const stripeCheckoutSuccess = async (sessionId) => {
+  const res = await api.get(`${API_BASE}/tontine-contributions/checkout/success`, {
+    params: { sessionId },
+  });
+  return res;
+};

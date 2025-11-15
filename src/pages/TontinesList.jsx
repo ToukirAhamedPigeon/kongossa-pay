@@ -1,6 +1,7 @@
 import React, { useEffect, useState, FormEvent } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getTontines, deleteTontine } from "@/api/tontines";
+import { createStripeCheckoutSession } from "@/api/stripe"; // new API function
 
 import Breadcrumbs from "@/components/dashboard/Breadcumbs";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,7 @@ export default function TontinesList() {
 
   const [tontines, setTontines] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [paymentLoadingId, setPaymentLoadingId] = useState(null);
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -54,7 +56,7 @@ export default function TontinesList() {
   });
 
   useEffect(() => {
-    document.title = "My Tontines"; // replaces <Head title="My Tontines" />
+    document.title = "My Tontines";
   }, []);
 
   const fetchTontines = async () => {
@@ -112,31 +114,48 @@ export default function TontinesList() {
     }
   };
 
+  const handleStripeCheckout = async (tontine) => {
+    try {
+      setPaymentLoadingId(tontine.id);
+      const session = await createStripeCheckoutSession({
+        amount: tontine.contributionAmount,
+        currency: "usd",
+        description: `Contribution to ${tontine.name}`,
+        metadata: {
+          tontine_id: tontine.id,
+          user_id: 1, // Replace with authenticated user ID
+        },
+      });
+
+      if (session.url) {
+        window.location.href = session.url; // redirect to Stripe
+      } else {
+        console.error("No Stripe session URL returned");
+      }
+    } catch (err) {
+      console.error("Stripe checkout error", err);
+      alert("Failed to start payment. Please try again.");
+    } finally {
+      setPaymentLoadingId(null);
+    }
+  };
+
   const getTypeBadgeColor = (type) => {
     switch (type) {
-      case "friends":
-        return "bg-blue-100 text-blue-800";
-      case "family":
-        return "bg-green-100 text-green-800";
-      case "savings":
-        return "bg-purple-100 text-purple-800";
-      case "investment":
-        return "bg-orange-100 text-orange-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+      case "friends": return "bg-blue-100 text-blue-800";
+      case "family": return "bg-green-100 text-green-800";
+      case "savings": return "bg-purple-100 text-purple-800";
+      case "investment": return "bg-orange-100 text-orange-800";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusBadgeColor = (status) => {
     switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "completed":
-        return "bg-gray-100 text-gray-800";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+      case "active": return "bg-green-100 text-green-800";
+      case "completed": return "bg-gray-100 text-gray-800";
+      case "pending": return "bg-yellow-100 text-yellow-800";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -292,17 +311,13 @@ export default function TontinesList() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
-                        <Link to={`/tontines/${tontine.id}`}>
-                          <Eye className="mr-2 h-4 w-4" /> View Details
-                        </Link>
+                      <DropdownMenuItem onClick={() => navigate(`/tontines/${tontine.id}`)}>
+                        <Eye className="mr-2 h-4 w-4" /> View Details
                       </DropdownMenuItem>
                       {tontine.isAdmin && (
                         <>
-                          <DropdownMenuItem asChild>
-                            <Link to={`/tontines/${tontine.id}/edit`}>
-                              <Edit className="mr-2 h-4 w-4" /> Edit Tontine
-                            </Link>
+                          <DropdownMenuItem onClick={() => navigate(`/tontines/${tontine.id}/edit`)}>
+                            <Edit className="mr-2 h-4 w-4" /> Edit Tontine
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-red-600 cursor-pointer"
@@ -319,68 +334,42 @@ export default function TontinesList() {
 
               <CardContent>
                 <div className="space-y-4">
-                  {/* Contribution Info */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-muted-foreground">
-                        Contribution
-                      </p>
+                      <p className="text-sm text-muted-foreground">Contribution</p>
                       <p className="text-lg font-bold">
                         ${Number(tontine.contributionAmount || 0).toFixed(2)}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {tontine.contributionFrequency}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{tontine.contributionFrequency}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Members</p>
-                      <p className="text-lg font-bold">
-                        {tontine.members?.length ?? 0}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        participants
-                      </p>
+                      <p className="text-lg font-bold">{tontine.members?.length ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">participants</p>
                     </div>
                   </div>
 
-                  {/* Financial Summary */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        Total Contributed:
-                      </span>
-                      <span className="font-medium text-blue-600">
-                        ${tontine.contributions?.reduce((a, c) => a + c.amount, 0) ?? 0}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        Total Collected:
-                      </span>
-                      <span className="font-medium text-green-600">
-                        ${tontine.totalPot ?? 0}
-                      </span>
-                    </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Total Contributed:</span>
+                    <span className="font-medium text-blue-600">
+                      ${tontine.totalContributed ?? 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Total Collected:</span>
+                    <span className="font-medium text-green-600">${tontine.totalCollected ?? 0}</span>
                   </div>
 
-                  {/* Next Payout */}
                   {tontine.next_payout_date && (
                     <div className="bg-muted/50 rounded-lg p-3">
                       <div className="flex items-center gap-2 text-sm">
                         <Calendar className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-muted-foreground">
-                          Next Payout:
-                        </span>
+                        <span className="text-muted-foreground">Next Payout:</span>
                       </div>
-                      <p className="font-medium">
-                        {new Date(
-                          tontine.next_payout_date
-                        ).toLocaleDateString()}
-                      </p>
+                      <p className="font-medium">{new Date(tontine.next_payout_date).toLocaleDateString()}</p>
                     </div>
                   )}
 
-                  {/* Duration Info */}
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock className="h-3 w-3" />
                     <span>{tontine.durationMonths ?? 0} months duration</span>
@@ -388,67 +377,23 @@ export default function TontinesList() {
 
                   {/* Action Buttons */}
                   <div className="flex gap-2 pt-2">
-                    <Button size="sm" asChild className="flex-1">
-                      <Link to={`/tontines/${tontine.id}`}>
-                        <Eye className="mr-2 h-3 w-3" />
-                        View
-                      </Link>
+                    <Button size="sm" onClick={() => navigate(`/tontines/${tontine.id}`)} className="flex-1">
+                      <Eye className="mr-2 h-3 w-3" /> View
                     </Button>
-                    <Button size="sm" variant="outline" asChild>
-                      <Link to={`/tontines/${tontine.id}/contribute`}>
-                        <DollarSign className="mr-2 h-3 w-3" />
-                        Contribute
-                      </Link>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleStripeCheckout(tontine)}
+                      disabled={paymentLoadingId === tontine.id}
+                      className="flex-1"
+                    >
+                      {paymentLoadingId === tontine.id ? "Processing..." : <><DollarSign className="mr-2 h-3 w-3" /> Contribute</>}
                     </Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
           ))}
-        </div>
-      )}
-
-      {/* Pagination */}
-      {pagination.last_page > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing {(pagination.current_page - 1) * pagination.per_page + 1} to{" "}
-            {Math.min(
-              pagination.current_page * pagination.per_page,
-              pagination.total
-            )}{" "}
-            of {pagination.total} tontines
-          </p>
-          <div className="flex gap-2">
-            {pagination.current_page > 1 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setSearchParams({
-                    ...Object.fromEntries(searchParams.entries()),
-                    page: pagination.current_page - 1,
-                  })
-                }
-              >
-                Previous
-              </Button>
-            )}
-            {pagination.current_page < pagination.last_page && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setSearchParams({
-                    ...Object.fromEntries(searchParams.entries()),
-                    page: pagination.current_page + 1,
-                  })
-                }
-              >
-                Next
-              </Button>
-            )}
-          </div>
         </div>
       )}
     </div>

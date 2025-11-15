@@ -5,13 +5,12 @@ import { cn } from "@/lib/utils";
 import { Link, useLocation } from "react-router-dom";
 
 const sidebarNavItems = [
-  { title: "Profile", href: "profile", icon: null },
-  { title: "Password", href: "password", icon: null },
-  { title: "Appearance", href: "appearance", icon: null },
+  { title: "Profile", href: "/profile", icon: null },
+  { title: "Password", href: "/password", icon: null },
+  { title: "Appearance", href: "/appearance", icon: null },
 ];
 
 export default function SettingsLayout({ children }) {
-  // Get current path using React Router
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -32,7 +31,7 @@ export default function SettingsLayout({ children }) {
                 variant="ghost"
                 asChild
                 className={cn("w-full justify-start", {
-                  "bg-muted": currentPath === item.href,
+                  "bg-muted": currentPath.startsWith(item.href),
                 })}
               >
                 <Link to={item.href}>{item.title}</Link>

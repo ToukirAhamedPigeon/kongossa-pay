@@ -40,6 +40,8 @@ import ContributionList from "@/pages/ContributionList";
 import TontineCreate from "@/pages/TontineCreate";
 import TontineDetail from "@/pages/TontineDetail";
 import TontineEdit from "@/pages/TontineEdit";
+import PaymentSuccess from "@/pages/PaymentSuccess";
+import PaymentCancel from "@/pages/PaymentCancel";
 
 // 🧭 Static Laravel-style routes
 export const routes = [
@@ -62,6 +64,9 @@ export const routes = [
     { path: "/profile", element: <Profile />, name: "Profile", permissions: ["read:dashboard"] },
     { path: "/password", element: <Password />, name: "Password", permissions: ["read:dashboard"] },
     { path: "/appearance", element: <Appearance />, name: "Appearance", permissions: ["read:dashboard"] },
+    { path: "/payment/success", element: <PaymentSuccess />, name: "PaymentSuccess", permissions: ["read:dashboard"] },
+    { path: "/payment/cancel", element: <PaymentCancel />, name: "PaymentCancel", permissions: ["read:dashboard"] },
+
 
     // Budgets
     { path: "/budgets", element: <Budgets />, name: "Budgets", permissions: ["read:dashboard"] },
@@ -80,7 +85,7 @@ export const routes = [
     { path: "/tontines/create", element: <TontineCreate />, name: "TontineCreate", permissions: ["read:dashboard"] },
     { path: "/tontines/invite", element: <TontineInvite />, name: "TontineInvite", permissions: ["read:dashboard"] },
     { path: "/tontines/:id", element: <TontineDetail />, name: "TontineDetail", permissions: ["read:dashboard"] },
-    { path: "/tontines/:id/contribute", element: <ContributionList />, name: "ContributionList", permissions: ["read:dashboard"] },
+    { path: "/tontine-contributions", element: <ContributionList />, name: "ContributionList", permissions: ["read:dashboard"] },
     { path: "/tontines/:id/edit", element: <TontineEdit />, name: "TontineEdit", permissions: ["read:dashboard"] },
 
 

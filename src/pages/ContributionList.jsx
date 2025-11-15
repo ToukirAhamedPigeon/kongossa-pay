@@ -123,12 +123,13 @@ export default function ContributionList() {
   };
 
   const paidAmount = (contributions.data || [])
-    .filter((c) => c.status === "paid")
+    .filter((c) => c.status === "completed")
     .reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
 
   const pendingAmount = (contributions.data || [])
-    .filter((c) => c.status !== "paid")
+    .filter((c) => c.status !== "completed")
     .reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
+
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -254,16 +255,16 @@ export default function ContributionList() {
                     </div>
                     <div>
                       <h3 className="text-lg font-medium text-gray-900">
-                        {contribution.tontine_member?.user?.name || "Unknown User"}
+                        {contribution.tontineMember?.user?.fullName || "Unknown User"}
                       </h3>
                       <div className="flex items-center space-x-2 text-sm text-gray-500">
                         <Users className="h-4 w-4" />
-                        <span>{contribution.tontine_member?.tontine?.name || "—"}</span>
+                        <span>{contribution.tontineMember?.tontine?.name || "—"}</span>
                         <span>•</span>
                         <Calendar className="h-4 w-4" />
                         <span>
-                          {contribution.contribution_date
-                            ? format(new Date(contribution.contribution_date), "MMM dd, yyyy")
+                          {contribution.createdAt
+                            ? format(new Date(contribution.createdAt), "MMM dd, yyyy")
                             : "—"}
                         </span>
                       </div>
@@ -281,9 +282,9 @@ export default function ContributionList() {
                           : "Unknown"}
                       </Badge>
                     </div>
-                    <Button variant="outline" size="sm">
+                    {/* <Button variant="outline" size="sm">
                       View
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               ))}

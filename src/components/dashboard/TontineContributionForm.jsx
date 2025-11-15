@@ -31,10 +31,10 @@ export default function TontineContributionForm({
     try {
       if (isEditing) {
         // UPDATE contribution
-        await contributeToTontine(contribution.id, payload);
+        await contributeToTontine(contribution.id, payload, tontineMember.user.id);
       } else {
         // CREATE contribution for member
-        await contributeToTontine(tontineMember.id, payload);
+        await contributeToTontine(tontineMember.tontine.id, payload, tontineMember.user.id);
       }
 
       onSuccess?.();

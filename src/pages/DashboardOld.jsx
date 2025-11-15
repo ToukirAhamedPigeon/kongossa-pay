@@ -470,7 +470,41 @@ export default function Dashboard() {
           </>
         )}
 
-    
+        {/* -------------------- ORIGINAL REACT DASHBOARD SECTIONS -------------------- */}
+        <BalanceCard user={user} onAddMoney={() => setShowAddMoney(true)} />
+        <QuickActionsGrid onShowQR={() => setShowQRCode(true)} />
+
+        <div className="grid lg:grid-cols-5 gap-8">
+          <div className="lg:col-span-3">
+            <TransactionChart transactions={transactions} />
+          </div>
+
+          <div className="lg:col-span-2 space-y-8">
+            <RecentTransactions transactions={transactions} />
+            <Card className="rounded-2xl shadow-sm bg-card">
+              <CardHeader>
+                <CardTitle className="text-lg">Méthodes de Paiement</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 bg-slate-100 rounded-lg">
+                    <CreditCard className="w-5 h-5 text-slate-600" />
+                    <div>
+                      <p className="font-medium text-sm">Visa **** 1234</p>
+                      <p className="text-xs text-slate-500">Carte Principale</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" className="w-full" asChild>
+                    <Link to={createPageUrl("Wallet")}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Gérer les méthodes
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
 
       {/* Dialogs */}

@@ -14,7 +14,7 @@ import { getProfile, updateProfile, deleteProfile } from "@/api/settings";
 export default function Profile() {
   const navigate = useNavigate();
 
-  const [profile, setProfile] = useState({ name: "", email: "" });
+  const [profile, setProfile] = useState({ fullName: "", email: "" });
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
@@ -23,7 +23,7 @@ export default function Profile() {
     try {
       setLoading(true);
       const data = await getProfile();
-      setProfile({ name: data.name, email: data.email });
+      setProfile({ fullName: data.fullName, email: data.email });
     } catch (err) {
       console.error(err);
     } finally {
@@ -83,9 +83,9 @@ export default function Profile() {
           <div className="grid gap-2">
             <Label htmlFor="name">Name</Label>
             <Input
-              id="name"
-              name="name"
-              value={profile.name}
+              id="fullName"
+              name="fullName"
+              value={profile.fullName}
               onChange={handleChange}
               required
               placeholder="Full name"

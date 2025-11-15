@@ -11,17 +11,17 @@ const setCookie = (name, value, days = 365) => {
   document.cookie = `${name}=${value};path=/;max-age=${maxAge};SameSite=Lax`;
 };
 
-const applyTheme = (appearance) => {
+export const applyTheme = (appearance) => {
   const isDark = appearance === 'dark' || (appearance === 'system' && prefersDark());
   document.documentElement.classList.toggle('dark', isDark);
 };
 
-const mediaQuery = () => {
+export const mediaQuery = () => {
   if (typeof window === 'undefined') return null;
   return window.matchMedia('(prefers-color-scheme: dark)');
 };
 
-const handleSystemThemeChange = () => {
+export const handleSystemThemeChange = () => {
   const currentAppearance = localStorage.getItem('appearance') || 'system';
   applyTheme(currentAppearance);
 };

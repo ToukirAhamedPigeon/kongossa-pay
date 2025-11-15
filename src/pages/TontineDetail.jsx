@@ -22,8 +22,7 @@ export default function TontineDetailPage() {
   const [showContributionForm, setShowContributionForm] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
 
-  useEffect(() => {
-    async function fetchTontine() {
+  async function fetchTontine() {
       try {
         const data = await getTontineById(id);
         setTontine(data);
@@ -33,6 +32,8 @@ export default function TontineDetailPage() {
         setLoading(false);
       }
     }
+
+  useEffect(() => {
     fetchTontine();
   }, [id]);
 
@@ -253,17 +254,17 @@ export default function TontineDetailPage() {
               {/* Recent Contributions */}
               <div>
                 <h4 className="font-medium text-sm mb-2">Recent Contributions</h4>
-                {tontine.recent_contributions.length === 0 ? (
+                {tontine.contributions.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No recent contributions</p>
                 ) : (
-                  tontine.recent_contributions.slice(0, 3).map(c => (
+                  tontine.contributions.slice(0, 3).map(c => (
                     <div key={c.id} className="flex justify-between items-center py-1">
                       <div>
-                        <p className="text-sm font-medium">{c.member.user.name}</p>
+                        <p className="text-sm font-medium">{c.tontineMember.user.fullName}</p>
                         <p className="text-xs text-muted-foreground">{new Date(c.contribution_date).toLocaleDateString()}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium">${c.amount.toFixed(2)}</p>
+                        <p className="text-sm font-medium">${c.amount ? Number(c.amount).toFixed(2) : '0.00'}</p>
                         <Badge variant="secondary" className={`text-xs ${getStatusBadgeColor(c.status)}`}>{c.status}</Badge>
                       </div>
                     </div>
@@ -302,7 +303,7 @@ export default function TontineDetailPage() {
             {selectedMember && (
               <TontineContributionForm
                 tontineMember={selectedMember}
-                onSuccess={() => { setShowContributionForm(false); setSelectedMember(null); }}
+                onSuccess={() => { setShowContributionForm(false); setSelectedMember(null); fetchTontine();}}
                 onCancel={() => { setShowContributionForm(false); setSelectedMember(null); }}
               />
             )}

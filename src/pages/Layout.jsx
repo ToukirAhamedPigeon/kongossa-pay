@@ -115,12 +115,8 @@ const isMarketingPage = marketingPages.includes(currentPageName);
     { title: "Manage Access", url: "/admin/roles", icon: Shield },
     {
       title: "Settings",
+      url: "/profile",
       icon: Settings,
-      children: [
-        { title: "Profile", url: "/profile", icon: Settings },
-        { title: "Password", url: "/password", icon: Settings },
-        { title: "Appearance", url: "/appearance", icon: Settings },
-      ],
     },
   ];
 

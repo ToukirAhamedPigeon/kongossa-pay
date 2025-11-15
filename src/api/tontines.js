@@ -78,11 +78,11 @@ export const removeTontineMember = async (id, memberId) => {
 
 export const getTontineContributeForm = async (id) => {
   const res = await api.get(`${API_BASE}/tontines/${id}/contribute`);
-  return res.data;
+  return res;
 };
 
-export const contributeToTontine = async (id, data) => {
-  const res = await api.post(`${API_BASE}/tontines/${id}/contribute`, data);
+export const contributeToTontine = async (id, data, userId) => {
+  const res = await api.post(`${API_BASE}/tontines/${id}/contribute/${userId}`, data);
   return res.data;
 };
 

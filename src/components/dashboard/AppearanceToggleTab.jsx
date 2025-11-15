@@ -1,10 +1,10 @@
 import React from "react";
 import { Sun, Moon, Monitor } from "lucide-react";
-import { useAppearance } from "../../hooks/use-appearance"; // adjust path
-import { cn } from "../../lib/utils"; // adjust path or inline classNames helper
+import useAppearanceRedux from "@/hooks/useAppearanceRedux"; // Redux-powered hook
+import { cn } from "@/lib/utils"; // classNames helper
 
 export default function AppearanceToggleTab({ className = '', ...props }) {
-  const { appearance, updateAppearance } = useAppearance();
+  const { appearance, updateAppearance } = useAppearanceRedux();
 
   const tabs = [
     { value: 'light', icon: Sun, label: 'Light' },
@@ -13,7 +13,13 @@ export default function AppearanceToggleTab({ className = '', ...props }) {
   ];
 
   return (
-    <div className={cn('inline-flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800', className)} {...props}>
+    <div
+      className={cn(
+        'inline-flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800',
+        className
+      )}
+      {...props}
+    >
       {tabs.map(({ value, icon: Icon, label }) => (
         <button
           key={value}
